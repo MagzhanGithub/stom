@@ -1,4 +1,5 @@
-import { Star, ShieldCheck } from 'lucide-react'
+import Image from 'next/image'
+import { ShieldCheck } from 'lucide-react'
 import Container from '@/components/ui/Container'
 import { clinic } from '@/lib/config'
 import HeroBookingButton from './HeroBookingButton'
@@ -56,50 +57,22 @@ export default function HeroSection() {
               </a>
             </div>
 
-            {/* Trust micro */}
-            <div className="flex flex-wrap items-center gap-4 text-body-sm text-text-muted">
-              <div className="flex items-center gap-1.5">
-                <span className="flex">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 fill-amber-400 text-amber-400"
-                      aria-hidden="true"
-                    />
-                  ))}
-                </span>
-                <span className="font-semibold text-text-secondary">
-                  {clinic.googleRating} Google
-                </span>
-              </div>
-              <span className="w-px h-4 bg-border" aria-hidden="true" />
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-brand-dark" aria-hidden="true" />
-                <span>Работаем с {clinic.foundedYear}&nbsp;года</span>
-              </div>
-            </div>
           </div>
 
           {/* ── Image column ── */}
           <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
             <div className="relative w-full max-w-sm lg:max-w-full aspect-[4/5] lg:aspect-auto
                             lg:h-[560px]">
-              {/* Main photo — замените src на реальное фото врача */}
-              <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-xl
-                              bg-gradient-to-br from-brand-lighter via-surface-4 to-brand-light
-                              flex flex-col items-center justify-center gap-4">
-                <svg
-                  viewBox="0 0 80 80"
-                  fill="none"
-                  className="w-24 h-24 opacity-30"
-                  aria-hidden="true"
-                >
-                  <circle cx="40" cy="28" r="16" fill="#2bbdc2" />
-                  <path d="M10 72c0-16.569 13.431-30 30-30s30 13.431 30 30" fill="#2bbdc2" />
-                </svg>
-                <p className="text-brand-dark/60 text-caption font-heading font-semibold tracking-wide">
-                  ФОТО ВРАЧА
-                </p>
+              {/* Doctor photo */}
+              <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-xl">
+                <Image
+                  src="/images/doctors/doctor.jpg"
+                  alt="Главный врач Жанар Сейткалиева"
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 1024px) 384px, 45vw"
+                  priority
+                />
               </div>
 
               {/* Floating badge */}

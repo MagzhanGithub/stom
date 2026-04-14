@@ -72,7 +72,6 @@ export default function BookingModal() {
     if (!form.name.trim()) e.name = 'Введите ваше имя'
     if (!form.phone.trim()) e.phone = 'Введите номер телефона'
     else if (!/^\+?[0-9\s\-()]{10,15}$/.test(form.phone)) e.phone = 'Введите корректный номер'
-    if (!form.consent) e.consent = 'Необходимо согласие'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -95,7 +94,14 @@ export default function BookingModal() {
     ].filter(Boolean).join('\n')
 
     const waUrl = `https://wa.me/${clinic.phone.replace('+', '')}?text=${encodeURIComponent(lines)}`
-    window.open(waUrl, '_blank', 'noopener,noreferrer')
+    // Use anchor click — more reliable than window.open on mobile (avoids popup blocker)
+    const a = document.createElement('a')
+    a.href = waUrl
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
 
     setIsLoading(false)
     setStep(4)
@@ -128,7 +134,7 @@ export default function BookingModal() {
         {/* Panel */}
         <motion.div
           className="relative z-10 w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl
-                     shadow-xl overflow-hidden pb-16 sm:pb-0"
+                     shadow-xl overflow-hidden"
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
@@ -319,27 +325,6 @@ export default function BookingModal() {
                                focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20
                                transition-colors duration-150"
                   />
-                </div>
-
-                <div>
-                  <label className="flex gap-3 items-start cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.consent}
-                      onChange={e => update('consent', e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-border accent-brand-dark"
-                      aria-describedby={errors.consent ? 'consent-error' : undefined}
-                    />
-                    <span className="text-body-sm text-text-secondary">
-                      Я согласен(а) на обработку персональных данных в соответствии
-                      с политикой конфиденциальности {clinic.name}
-                    </span>
-                  </label>
-                  {errors.consent && (
-                    <p id="consent-error" className="mt-1 text-body-sm text-state-error ml-7" role="alert">
-                      {errors.consent}
-                    </p>
-                  )}
                 </div>
 
                 <p className="text-caption text-text-muted">
