@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Award, GraduationCap, Star } from 'lucide-react'
+import { Award, GraduationCap, Star, ShieldCheck } from 'lucide-react'
 import Container from '@/components/ui/Container'
 import SectionHeading from '@/components/ui/SectionHeading'
 import CTAButton from './CTAButton'
@@ -47,7 +47,22 @@ export default function DoctorSection() {
                 className="object-cover object-top"
                 sizes="(max-width: 1024px) 384px, 50vw"
               />
-              {/* Experience badge */}
+              {/* Free exam badge — top right */}
+              <div
+                className="absolute top-5 right-5 bg-white rounded-2xl shadow-lg px-4 py-3
+                           flex items-center gap-2.5"
+                aria-hidden="true"
+              >
+                <div className="w-8 h-8 rounded-full bg-brand-lighter flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-brand-dark" />
+                </div>
+                <div>
+                  <p className="text-caption text-text-muted leading-tight">Для новых пациентов</p>
+                  <p className="text-body-sm font-heading font-semibold text-navy">Бесплатный осмотр</p>
+                </div>
+              </div>
+
+              {/* Experience badge — bottom left */}
               <div
                 className="absolute bottom-6 left-6 bg-white rounded-2xl shadow-lg px-4 py-3"
                 aria-hidden="true"

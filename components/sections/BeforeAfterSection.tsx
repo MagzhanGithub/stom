@@ -11,38 +11,38 @@ import { staggerContainer, fadeUp, viewportOnce } from '@/lib/animations'
 interface Case {
   id: string
   label: string
-  beforeSrc: string
-  afterSrc: string
+  src: string
   beforeLabel: string
   afterLabel: string
 }
 
+// One photo per case — CSS filter makes the left "before" side look yellow/stained
 const cases: Case[] = [
   {
     id: 'whitening',
     label: 'Отбеливание',
-    beforeSrc: '/images/before-after/whitening-before.jpg',
-    afterSrc:  '/images/before-after/whitening-after.jpg',
+    src: '/images/before-after/whitening.jpg',
     beforeLabel: 'До отбеливания',
     afterLabel: 'После отбеливания',
   },
   {
     id: 'veneers',
     label: 'Виниры',
-    beforeSrc: '/images/before-after/veneers-before.jpg',
-    afterSrc:  '/images/before-after/veneers-after.jpg',
+    src: '/images/before-after/veneers.jpg',
     beforeLabel: 'До виниров',
     afterLabel: 'После виниров',
   },
   {
     id: 'implant',
     label: 'Имплантат',
-    beforeSrc: '/images/before-after/implant-before.jpg',
-    afterSrc:  '/images/before-after/implant-after.jpg',
+    src: '/images/before-after/implant.jpg',
     beforeLabel: 'До имплантации',
     afterLabel: 'После имплантации',
   },
 ]
+
+// CSS filter applied to the "before" (left) half to simulate yellow/stained teeth
+const BEFORE_FILTER = 'sepia(1) saturate(2) brightness(0.75) contrast(0.9)'
 
 function CompareSlider({ item }: { item: Case }) {
   const [pos, setPos] = useState(50)
@@ -92,9 +92,9 @@ function CompareSlider({ item }: { item: Case }) {
       role="img"
       aria-label={`Сравнение: ${item.beforeLabel} / ${item.afterLabel}`}
     >
-      {/* After (base layer — right side) */}
+      {/* After (base layer — right side, normal photo = white teeth) */}
       <Image
-        src={item.afterSrc}
+        src={item.src}
         alt={item.afterLabel}
         fill
         className="object-cover"
@@ -102,19 +102,20 @@ function CompareSlider({ item }: { item: Case }) {
         draggable={false}
       />
 
-      {/* Before (clipped to left of divider) */}
+      {/* Before (left side, same photo with yellow filter = stained teeth) */}
       <div
         className="absolute inset-0 overflow-hidden"
         style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
         aria-hidden="true"
       >
         <Image
-          src={item.beforeSrc}
+          src={item.src}
           alt={item.beforeLabel}
           fill
           className="object-cover"
-          sizes="(max-width: 1024px) 100vw, 512px"
+          style={{ filter: BEFORE_FILTER }}
           draggable={false}
+          sizes="(max-width: 1024px) 100vw, 512px"
         />
       </div>
 

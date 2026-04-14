@@ -80,7 +80,23 @@ export default function BookingModal() {
   async function submit() {
     if (!validateStep3()) return
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 1200)) // TODO: replace with real API call
+
+    // Build WhatsApp message with booking details
+    const service = services.find(s => s.id === form.serviceId)
+    const lines = [
+      `📋 *Новая запись — ${clinic.name}*`,
+      ``,
+      `👤 Имя: ${form.name}`,
+      `📞 Телефон: ${form.phone}`,
+      `🦷 Услуга: ${service?.title ?? '—'}`,
+      form.date ? `📅 Дата: ${formatDate(form.date)}` : '',
+      form.time ? `🕐 Время: ${form.time}` : '',
+      form.comment ? `💬 ${form.comment}` : '',
+    ].filter(Boolean).join('\n')
+
+    const waUrl = `https://wa.me/${clinic.phone.replace('+', '')}?text=${encodeURIComponent(lines)}`
+    window.open(waUrl, '_blank', 'noopener,noreferrer')
+
     setIsLoading(false)
     setStep(4)
   }
@@ -112,7 +128,7 @@ export default function BookingModal() {
         {/* Panel */}
         <motion.div
           className="relative z-10 w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl
-                     shadow-xl overflow-hidden"
+                     shadow-xl overflow-hidden pb-16 sm:pb-0"
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
@@ -350,7 +366,7 @@ export default function BookingModal() {
                 <div className="bg-surface-2 rounded-xl p-4 text-left text-body-sm text-text-secondary mb-6 space-y-1">
                   <p>📍 {clinic.fullAddress}</p>
                   {form.time && <p>🕐 {formatDate(form.date)} · {form.time}</p>}
-                  <p>📞 Подтверждение придёт на {form.phone}</p>
+                  <p>💬 Заявка отправлена в WhatsApp — мы свяжемся с вами</p>
                 </div>
                 <Button variant="secondary" fullWidth onClick={close}>
                   Закрыть

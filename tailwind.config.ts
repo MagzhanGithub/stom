@@ -115,6 +115,9 @@ const config: Config = {
         'container': '1200px',
         'narrow':    '780px',
       },
+      zIndex: {
+        '60': '60',
+      },
     },
   },
   plugins: [],
