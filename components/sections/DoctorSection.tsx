@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Award, GraduationCap, Star } from 'lucide-react'
 import Container from '@/components/ui/Container'
@@ -38,17 +39,14 @@ export default function DoctorSection() {
         >
           {/* Photo column */}
           <motion.div variants={fadeIn} className="relative">
-            <div className="relative aspect-[4/5] max-w-sm mx-auto lg:max-w-none rounded-3xl overflow-hidden shadow-xl
-                            bg-gradient-to-br from-brand-lighter via-surface-4 to-brand-light
-                            flex flex-col items-center justify-center gap-3">
-              {/* Замените на <Image src={doctor.photo} ... /> когда получите реальное фото */}
-              <svg viewBox="0 0 80 80" fill="none" className="w-28 h-28 opacity-30" aria-hidden="true">
-                <circle cx="40" cy="28" r="16" fill="#2bbdc2" />
-                <path d="M10 72c0-16.569 13.431-30 30-30s30 13.431 30 30" fill="#2bbdc2" />
-              </svg>
-              <p className="text-brand-dark/50 text-caption font-heading font-semibold tracking-wide">
-                ФОТО ВРАЧА
-              </p>
+            <div className="relative aspect-[4/5] max-w-sm mx-auto lg:max-w-none rounded-3xl overflow-hidden shadow-xl">
+              <Image
+                src="/images/doctors/doctor.jpg"
+                alt={`Главный врач ${doctor.name}`}
+                fill
+                className="object-cover object-top"
+                sizes="(max-width: 1024px) 384px, 50vw"
+              />
               {/* Experience badge */}
               <div
                 className="absolute bottom-6 left-6 bg-white rounded-2xl shadow-lg px-4 py-3"

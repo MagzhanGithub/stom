@@ -20,6 +20,12 @@ interface FormData {
   consent: boolean
 }
 
+function formatDate(iso: string): string {
+  if (!iso) return iso
+  const [y, m, d] = iso.split('-')
+  return `${d}.${m}.${y}`
+}
+
 const timeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
   '12:00', '13:00', '14:00', '14:30', '15:00', '15:30',
@@ -336,14 +342,14 @@ export default function BookingModal() {
                 <p className="text-body text-text-secondary mb-6">
                   Ваша заявка принята.&nbsp;
                   {form.date && form.time ? (
-                    <>Ждём вас <strong className="text-navy">{form.date}</strong> в <strong className="text-navy">{form.time}</strong>.</>
+                    <>Ждём вас <strong className="text-navy">{formatDate(form.date)}</strong> в <strong className="text-navy">{form.time}</strong>.</>
                   ) : (
                     <>Мы свяжемся с вами для подтверждения времени.</>
                   )}
                 </p>
                 <div className="bg-surface-2 rounded-xl p-4 text-left text-body-sm text-text-secondary mb-6 space-y-1">
                   <p>📍 {clinic.fullAddress}</p>
-                  {form.time && <p>🕐 {form.date} · {form.time}</p>}
+                  {form.time && <p>🕐 {formatDate(form.date)} · {form.time}</p>}
                   <p>📞 Подтверждение придёт на {form.phone}</p>
                 </div>
                 <Button variant="secondary" fullWidth onClick={close}>

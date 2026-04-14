@@ -78,6 +78,7 @@ export interface ClinicConfig {
   siteUrl: string
   email?: string
   coordinates: { lat: number; lng: number }
+  mapEmbedSrc?: string
   hours: WorkingHours[]
   foundedYear: number
   patientsCount: string

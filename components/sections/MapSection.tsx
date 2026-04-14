@@ -121,7 +121,7 @@ export default function MapSection() {
           <div className="rounded-2xl overflow-hidden shadow-md aspect-[4/3] lg:aspect-auto lg:h-[420px]">
             <iframe
               title={`Карта: ${clinic.name} — ${clinic.fullAddress}`}
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(clinic.fullAddress)}&z=16&output=embed`}
+              src={clinic.mapEmbedSrc ?? `https://maps.google.com/maps?q=${encodeURIComponent(clinic.fullAddress)}&z=16&output=embed`}
               width="100%"
               height="100%"
               loading="lazy"

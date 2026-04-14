@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Container from '@/components/ui/Container'
@@ -10,47 +11,38 @@ import { staggerContainer, fadeUp, viewportOnce } from '@/lib/animations'
 interface Case {
   id: string
   label: string
+  beforeSrc: string
+  afterSrc: string
   beforeLabel: string
   afterLabel: string
-  beforeColor: string
-  afterColor: string
 }
 
 const cases: Case[] = [
   {
     id: 'whitening',
     label: 'Отбеливание',
+    beforeSrc: '/images/before-after/whitening-before.jpg',
+    afterSrc:  '/images/before-after/whitening-after.jpg',
     beforeLabel: 'До отбеливания',
     afterLabel: 'После отбеливания',
-    beforeColor: 'from-amber-50 to-amber-100',
-    afterColor: 'from-brand-lighter to-surface-4',
   },
   {
     id: 'veneers',
     label: 'Виниры',
+    beforeSrc: '/images/before-after/veneers-before.jpg',
+    afterSrc:  '/images/before-after/veneers-after.jpg',
     beforeLabel: 'До виниров',
     afterLabel: 'После виниров',
-    beforeColor: 'from-slate-100 to-slate-200',
-    afterColor: 'from-brand-lighter to-white',
   },
   {
     id: 'implant',
     label: 'Имплантат',
+    beforeSrc: '/images/before-after/implant-before.jpg',
+    afterSrc:  '/images/before-after/implant-after.jpg',
     beforeLabel: 'До имплантации',
     afterLabel: 'После имплантации',
-    beforeColor: 'from-red-50 to-rose-100',
-    afterColor: 'from-brand-lighter to-surface-4',
   },
 ]
-
-// Зуб SVG иконка
-function ToothIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 40 48" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M20 2C14 2 8 6 8 13c0 4 1.5 7 2 10 .5 3 1 8 2 12 .5 2 1.5 3 2.5 3s1.5-1 2-3l1-5c.5-2 1-3 2.5-3s2 1 2.5 3l1 5c.5 2 1 3 2 3s2-1 2.5-3c1-4 1.5-9 2-12 .5-3 2-6 2-10 0-7-6-11-12-11z" />
-    </svg>
-  )
-}
 
 function CompareSlider({ item }: { item: Case }) {
   const [pos, setPos] = useState(50)
@@ -101,13 +93,14 @@ function CompareSlider({ item }: { item: Case }) {
       aria-label={`Сравнение: ${item.beforeLabel} / ${item.afterLabel}`}
     >
       {/* After (base layer — right side) */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${item.afterColor}
-                       flex flex-col items-center justify-center gap-3`}>
-        <ToothIcon className="w-16 h-20 text-brand/40" />
-        <p className="text-brand-dark/60 text-body-sm font-heading font-semibold">
-          Добавьте фото
-        </p>
-      </div>
+      <Image
+        src={item.afterSrc}
+        alt={item.afterLabel}
+        fill
+        className="object-cover"
+        sizes="(max-width: 1024px) 100vw, 512px"
+        draggable={false}
+      />
 
       {/* Before (clipped to left of divider) */}
       <div
@@ -115,13 +108,14 @@ function CompareSlider({ item }: { item: Case }) {
         style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
         aria-hidden="true"
       >
-        <div className={`absolute inset-0 bg-gradient-to-br ${item.beforeColor}
-                         flex flex-col items-center justify-center gap-3`}>
-          <ToothIcon className="w-16 h-20 text-text-muted/30" />
-          <p className="text-text-muted/60 text-body-sm font-heading font-semibold">
-            Добавьте фото
-          </p>
-        </div>
+        <Image
+          src={item.beforeSrc}
+          alt={item.beforeLabel}
+          fill
+          className="object-cover"
+          sizes="(max-width: 1024px) 100vw, 512px"
+          draggable={false}
+        />
       </div>
 
       {/* Divider */}
@@ -215,7 +209,7 @@ export default function BeforeAfterSection() {
           >
             <CompareSlider item={cases[active]!} />
             <p className="text-center text-caption text-text-muted mt-3">
-              Фото работ будут добавлены. Перетащите разделитель для сравнения.
+              Перетащите разделитель, чтобы сравнить результат
             </p>
           </motion.div>
         </motion.div>
