@@ -11,7 +11,7 @@ npm run lint       # ESLint via next lint
 npm run type-check # tsc --noEmit (no test suite exists)
 ```
 
-No test suite is configured. Type-check before committing.
+No test suite is configured. Type-check before committing. ESLint runs during `next build` — unused imports fail the build.
 
 ## Stack
 
@@ -22,14 +22,12 @@ Next.js 14 App Router · TypeScript strict · Tailwind CSS v3 · Framer Motion v
 ### Data layer — single source of truth
 
 All clinic data lives in `lib/`:
-- `lib/config.ts` — clinic name, phone, address, hours, coordinates. **All TODO fields need real client data.**
+- `lib/config.ts` — clinic name, phone, address, hours, coordinates, `mapEmbedSrc` (Google Maps embed URL using plus code). **Never hardcode clinic data in components.**
 - `lib/services.ts` — 7 service categories with KZT price items; `getServiceBySlug()` for dynamic pages
 - `lib/types.ts` — all shared TypeScript interfaces including `ClinicConfig`
 - `lib/faq.ts`, `lib/reviews.ts` — static content arrays
 - `lib/animations.ts` — shared Framer Motion `Variants` (`fadeUp`, `staggerContainer`, `viewportOnce`, etc.)
 - `lib/utils.ts` — `cn()` (clsx + tailwind-merge), `formatPrice()`
-
-**Never hardcode clinic data in components** — always import from `lib/config.ts` or the relevant lib file.
 
 ### CTA / booking modal coordination
 
@@ -43,7 +41,24 @@ window.dispatchEvent(new CustomEvent('open-booking-modal'))
 window.addEventListener('open-booking-modal', handler)
 ```
 
-`components/sections/CTAButton.tsx` and `components/sections/HeroBookingButton.tsx` are thin `'use client'` wrappers that fire the event, allowing their parent sections to stay as Server Components.
+`components/sections/CTAButton.tsx` and `components/sections/HeroBookingButton.tsx` are thin `'use client'` wrappers that fire the event, allowing parent sections to stay as Server Components.
+
+### Booking → WhatsApp flow
+
+`BookingModal` (4-step form) sends booking data to the clinic's WhatsApp on submit:
+
+```ts
+// submit() builds a wa.me URL with encoded message, then:
+const a = document.createElement('a')
+a.href = waUrl   // https://wa.me/77074289598?text=...
+a.target = '_blank'
+document.body.appendChild(a)
+a.click()        // anchor click is more reliable than window.open on mobile
+document.body.removeChild(a)
+setStep(4)       // show success screen
+```
+
+`formatDate(iso)` in `BookingModal.tsx` converts `YYYY-MM-DD` → `DD.MM.YYYY` for display.
 
 ### Server vs Client components
 
@@ -64,17 +79,9 @@ Named variants work normally: `brand-dark`, `brand-lighter`, `navy-light`, `cta-
 
 **White text on `brand` (teal #4ddde2) fails WCAG AA** (contrast 2.1:1). Never use `text-white` on teal backgrounds. Use `text-navy` instead.
 
-### Page structure
-
-`app/page.tsx` assembles all homepage sections in order. Inner pages (`/uslugi/[slug]`, `/tseny`, `/kontakty`, `/o-nas`) each include `<BookingModal />` at the end.
-
-`components/JsonLd.tsx` is rendered in `app/layout.tsx` and outputs LocalBusiness, FAQPage, and ServiceList JSON-LD for all pages.
-
-### Contact / messaging
-
-All contact actions go through `components/ui/ContactLinks.tsx` — shows WhatsApp, Telegram, and phone call in one component. Use `iconsOnly` prop for compact header placement. Phone number and WhatsApp URL live in `lib/config.ts` (`phone`, `whatsappUrl`).
-
 ### z-index stack
+
+`z-60` is a **custom value** defined in `tailwind.config.ts` under `extend.zIndex`. Standard Tailwind only goes to `z-50`.
 
 | Layer | z-index |
 |-------|---------|
@@ -84,9 +91,25 @@ All contact actions go through `components/ui/ContactLinks.tsx` — shows WhatsA
 | Mobile bottom bar | 50 |
 | Booking modal | 60 |
 
+### Page structure
+
+`app/page.tsx` assembles all homepage sections in order. Inner pages (`/uslugi/[slug]`, `/tseny`, `/kontakty`, `/o-nas`) each include `<BookingModal />` at the end.
+
+`components/JsonLd.tsx` is rendered in `app/layout.tsx` and outputs LocalBusiness, FAQPage, and ServiceList JSON-LD for all pages.
+
+### Header layout
+
+**Desktop**: logo → nav links → phone number → "Записаться" button. No social icons.
+
+**Mobile**: logo → phone icon (`tel:` link) → hamburger. `MobileBottomBar` (fixed, `md:hidden`) shows WhatsApp + "Записаться".
+
+`ContactLinks` component exists but is **not** used in the header or CTA sections — it's available for other placement if needed.
+
 ### Images
 
-Real photos are not yet added. See `public/images/IMAGES.md` for the full list of required files and target dimensions. `blurDataURL` placeholders are hardcoded base64 strings — replace them once real images are added (use `npx plaiceholder`).
+Real photos are in place:
+- `public/images/doctors/doctor.jpg` — clinic doctor photo
+- `public/images/before-after/whitening.jpg`, `veneers.jpg`, `implant.jpg` — single photo per category; the before/after slider applies a CSS sepia filter on the left ("before") half to simulate yellow→white transformation. No separate before/after image pairs needed.
 
 ### framer-motion + Next.js 14
 
