@@ -1,6 +1,5 @@
 import { Star, ShieldCheck } from 'lucide-react'
 import Container from '@/components/ui/Container'
-import Button from '@/components/ui/Button'
 import { clinic } from '@/lib/config'
 import HeroBookingButton from './HeroBookingButton'
 

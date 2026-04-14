@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { X, CalendarDays, Clock, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { X, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { services } from '@/lib/services'
