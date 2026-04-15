@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Bell, ShoppingBag, CreditCard, List, Package,
-  ChevronDown, LogOut, Settings,
+  ChevronDown, LogOut,
 } from 'lucide-react'
 import CalendarWidget from './CalendarWidget'
 
@@ -18,9 +18,11 @@ const quickActions = [
 interface Props {
   selectedDate: Date
   onDateChange: (d: Date) => void
+  onToggle: () => void
+  adminLogin: string
 }
 
-export default function Sidebar({ selectedDate, onDateChange }: Props) {
+export default function Sidebar({ selectedDate, onDateChange, onToggle, adminLogin }: Props) {
   const router = useRouter()
   const [favOpen, setFavOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -34,10 +36,14 @@ export default function Sidebar({ selectedDate, onDateChange }: Props) {
   return (
     <aside className="w-[220px] flex-shrink-0 bg-[#1e1f2d] flex flex-col h-full overflow-y-auto">
 
-      {/* Logo */}
+      {/* Logo + bell (bell toggles sidebar) */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
         <span className="font-heading font-extrabold text-lg text-white tracking-wide">dent</span>
-        <button className="relative text-slate-400 hover:text-white transition-colors">
+        <button
+          onClick={onToggle}
+          className="relative text-slate-400 hover:text-white transition-colors"
+          aria-label="Скрыть боковую панель"
+        >
           <Bell className="w-5 h-5" />
         </button>
       </div>
@@ -82,20 +88,10 @@ export default function Sidebar({ selectedDate, onDateChange }: Props) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* User block */}
+      {/* User + logout */}
       <div className="border-t border-white/10">
-        {/* Администрирование — active item */}
-        <div className="mx-2 my-2 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-yellow-400">
-          <Settings className="w-4 h-4 text-slate-900" />
-          <span className="text-sm font-semibold text-slate-900">Администрирование</span>
-        </div>
-
-        {/* User info + logout */}
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-white truncate">Magzhan</p>
-            <p className="text-[10px] text-slate-500 truncate">magzhanabdikaiyr@gmail.com</p>
-          </div>
+        <div className="flex items-center justify-between px-4 py-4">
+          <p className="text-sm font-semibold text-white truncate">{adminLogin}</p>
           <button
             onClick={handleLogout}
             disabled={loggingOut}

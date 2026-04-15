@@ -23,6 +23,8 @@ const MOCK_APPOINTMENTS: Appointment[] = [
 ]
 // ───────────────────────────────────────────────────────────────────────────
 
+const ADMIN_LOGIN = 'magzhan'
+
 function addDays(date: Date, days: number) {
   const d = new Date(date)
   d.setDate(d.getDate() + days)
@@ -32,22 +34,32 @@ function addDays(date: Date, days: number) {
 export default function AdminDashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [viewMode,     setViewMode]     = useState<'day' | 'week'>('day')
+  const [sidebarOpen,  setSidebarOpen]  = useState(true)
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
 
       {/* Sidebar */}
-      <Sidebar selectedDate={selectedDate} onDateChange={setSelectedDate} />
+      {sidebarOpen && (
+        <Sidebar
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          onToggle={() => setSidebarOpen(false)}
+          adminLogin={ADMIN_LOGIN}
+        />
+      )}
 
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader
           selectedDate={selectedDate}
-          onPrev={()    => setSelectedDate(d => addDays(d, viewMode === 'day' ? -1 : -7))}
-          onNext={()    => setSelectedDate(d => addDays(d, viewMode === 'day' ?  1 :  7))}
-          onToday={()   => setSelectedDate(new Date())}
+          onPrev={()  => setSelectedDate(d => addDays(d, viewMode === 'day' ? -1 : -7))}
+          onNext={()  => setSelectedDate(d => addDays(d, viewMode === 'day' ?  1 :  7))}
+          onToday={()  => setSelectedDate(new Date())}
           viewMode={viewMode}
           onViewChange={setViewMode}
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen(v => !v)}
         />
 
         {/* Schedule */}
