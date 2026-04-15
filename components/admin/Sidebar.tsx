@@ -18,11 +18,10 @@ const quickActions = [
 interface Props {
   selectedDate: Date
   onDateChange: (d: Date) => void
-  onToggle: () => void
   adminLogin: string
 }
 
-export default function Sidebar({ selectedDate, onDateChange, onToggle, adminLogin }: Props) {
+export default function Sidebar({ selectedDate, onDateChange, adminLogin }: Props) {
   const router = useRouter()
   const [favOpen, setFavOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)

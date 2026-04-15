@@ -44,7 +44,6 @@ export default function AdminDashboardPage() {
         <Sidebar
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
-          onToggle={() => setSidebarOpen(false)}
           adminLogin={ADMIN_LOGIN}
         />
       )}
