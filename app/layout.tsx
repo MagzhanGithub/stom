@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Montserrat, Open_Sans } from 'next/font/google'
 import './globals.css'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
-import MobileBottomBar from '@/components/layout/MobileBottomBar'
 import JsonLd from '@/components/JsonLd'
+import SiteChrome from '@/components/layout/SiteChrome'
 import { clinic } from '@/lib/config'
 
 const montserrat = Montserrat({
@@ -55,14 +53,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru" className={`${montserrat.variable} ${openSans.variable}`}>
       <body>
-        <a href="#main" className="skip-link">
-          Перейти к содержимому
-        </a>
         <JsonLd />
-        <Header />
-        <main id="main">{children}</main>
-        <Footer />
-        <MobileBottomBar />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   )
