@@ -40,9 +40,8 @@ export default function Sidebar({ selectedDate, onDateChange, onToggle, adminLog
       <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
         <span className="font-heading font-extrabold text-lg text-white tracking-wide">dent</span>
         <button
-          onClick={onToggle}
           className="relative text-slate-400 hover:text-white transition-colors"
-          aria-label="Скрыть боковую панель"
+          aria-label="Уведомления"
         >
           <Bell className="w-5 h-5" />
         </button>

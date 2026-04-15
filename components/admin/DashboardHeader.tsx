@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, Filter, Search, Users, LayoutGrid, PanelLeftOpen } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter, Search, Users, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const WEEKDAYS_RU = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота']
@@ -22,32 +22,23 @@ interface Props {
   onToday: () => void
   viewMode: ViewMode
   onViewChange: (v: ViewMode) => void
-  sidebarOpen: boolean
   onToggleSidebar: () => void
 }
 
 export default function DashboardHeader({
   selectedDate, onPrev, onNext, onToday, viewMode, onViewChange,
-  sidebarOpen, onToggleSidebar,
+  onToggleSidebar,
 }: Props) {
   return (
     <header className="h-14 flex items-center justify-between px-4 bg-white border-b border-slate-200 flex-shrink-0">
 
       {/* Left: sidebar toggle + date navigation */}
       <div className="flex items-center gap-3">
-        {/* Sidebar toggle — visible when sidebar is closed */}
-        {!sidebarOpen && (
-          <button
-            onClick={onToggleSidebar}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500"
-            aria-label="Показать боковую панель"
-          >
-            <PanelLeftOpen className="w-4 h-4" />
-          </button>
-        )}
-
+        {/* Sidebar toggle — always visible */}
         <button
+          onClick={onToggleSidebar}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500"
+          aria-label="Показать/скрыть боковую панель"
         >
           <LayoutGrid className="w-4 h-4" />
         </button>

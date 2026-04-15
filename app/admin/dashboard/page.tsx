@@ -58,7 +58,6 @@ export default function AdminDashboardPage() {
           onToday={()  => setSelectedDate(new Date())}
           viewMode={viewMode}
           onViewChange={setViewMode}
-          sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(v => !v)}
         />
 

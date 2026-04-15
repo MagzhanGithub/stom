@@ -25,7 +25,7 @@ interface Props {
 
 // Grid config
 const START_HOUR  = 9
-const END_HOUR    = 19
+const END_HOUR    = 18
 const SLOT_MIN    = 30    // minutes per row
 const SLOT_H      = 32    // px per slot → compact, fits more on screen
 
@@ -45,11 +45,14 @@ const BASE_MIN    = timeToMinutes(START_HOUR, 0)
 const TOTAL_SLOTS = ((END_HOUR - START_HOUR) * 60) / SLOT_MIN
 const gridHeight  = TOTAL_SLOTS * SLOT_H
 
-function slotLabel(i: number) {
-  const totalMin = START_HOUR * 60 + i * SLOT_MIN
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+function slotLabel(i: number): string {
+  if (i % 2 === 0) {
+    // Full hour — show HH:00
+    const h = START_HOUR + i / 2
+    return `${String(h).padStart(2, '0')}:00`
+  }
+  // Half-hour — show just "30"
+  return '30'
 }
 
 export default function ScheduleGrid({ staff, appointments }: Props) {
@@ -70,7 +73,8 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
               style={{ height: SLOT_H }}
             >
               <span className={cn(
-                '-translate-y-2',
+                // First slot: don't shift up so 09:00 stays visible
+                i === 0 ? 'translate-y-0.5' : '-translate-y-2',
                 i % 2 === 0
                   ? 'text-[11px] text-slate-500 font-medium'
                   : 'text-[10px] text-slate-300',
@@ -149,7 +153,7 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
               style={{ height: SLOT_H }}
             >
               <span className={cn(
-                '-translate-y-2',
+                i === 0 ? 'translate-y-0.5' : '-translate-y-2',
                 i % 2 === 0
                   ? 'text-[11px] text-slate-500 font-medium'
                   : 'text-[10px] text-slate-300',
