@@ -3,7 +3,7 @@ import DoctorSection       from '@/components/sections/DoctorSection'
 import WhyUsSection        from '@/components/sections/WhyUsSection'
 import TestimonialsSection from '@/components/sections/TestimonialsSection'
 import FinalCTASection     from '@/components/sections/FinalCTASection'
-import BookingModal        from '@/components/sections/BookingModal'
+import AltegioBookingModal from '@/components/sections/AltegioBookingModal'
 import { clinic }          from '@/lib/config'
 
 export const metadata: Metadata = {
@@ -33,7 +33,7 @@ export default function ONasPage() {
       <DoctorSection />
       <TestimonialsSection />
       <FinalCTASection />
-      <BookingModal />
+      <AltegioBookingModal />
     </>
   )
 }

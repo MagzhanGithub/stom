@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import BeforeAfterSection from '@/components/sections/BeforeAfterSection'
 import FinalCTASection from '@/components/sections/FinalCTASection'
-import BookingModal from '@/components/sections/BookingModal'
+import AltegioBookingModal from '@/components/sections/AltegioBookingModal'
 import { clinic } from '@/lib/config'
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function DoPoslePage() {
       </div>
       <BeforeAfterSection />
       <FinalCTASection />
-      <BookingModal />
+      <AltegioBookingModal />
     </>
   )
 }
