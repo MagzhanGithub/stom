@@ -75,19 +75,26 @@ export default function MobileNav({ id, isOpen, links, onClose }: MobileNavProps
                 </Link>
               </li>
             ))}
+
+            {/* Divider */}
+            <li aria-hidden="true" className="border-t border-border my-2" />
+
+            {/* Войти */}
+            <li>
+              <Link
+                href="/admin/login"
+                onClick={onClose}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-body font-heading font-medium
+                           text-text-primary hover:bg-surface-2 transition-colors duration-150"
+              >
+                <UserCircle2 className="w-5 h-5 text-text-muted" aria-hidden="true" />
+                Войти
+              </Link>
+            </li>
           </ul>
         </div>
 
-        <div className="p-6 border-t border-border space-y-4">
-          <Link
-            href="/admin/login"
-            onClick={onClose}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-body font-heading font-medium
-                       text-text-primary hover:bg-surface-2 transition-colors duration-150"
-          >
-            <UserCircle2 className="w-5 h-5 text-text-muted" aria-hidden="true" />
-            Войти
-          </Link>
+        <div className="p-6 border-t border-border">
           <ContactLinks iconsOnly className="justify-center" />
         </div>
       </nav>

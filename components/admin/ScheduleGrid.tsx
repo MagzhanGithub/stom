@@ -66,11 +66,12 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
           className="w-16 flex-shrink-0 bg-white border-r border-slate-200"
           style={{ position: 'sticky', left: 0, zIndex: 10 }}
         >
-          {Array.from({ length: TOTAL_SLOTS }).map((_, i) => (
+          {/* TOTAL_SLOTS + 1 to include closing 18:00 label */}
+          {Array.from({ length: TOTAL_SLOTS + 1 }).map((_, i) => (
             <div
               key={i}
               className="flex items-start justify-end pr-3"
-              style={{ height: SLOT_H }}
+              style={{ height: i < TOTAL_SLOTS ? SLOT_H : 0 }}
             >
               <span className={cn(
                 '-translate-y-2',
@@ -90,7 +91,7 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
           return (
             <div
               key={member.id}
-              className="flex-1 min-w-0 md:min-w-[320px] border-l border-slate-200"
+              className="flex-1 min-w-0 md:min-w-[320px] border-l border-r border-slate-200"
               style={{ position: 'relative', height: gridHeight }}
             >
               {/* Grid lines: full line for hours, short dash for half-hours */}
@@ -144,14 +145,14 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
 
         {/* Right time column — sticky right, hidden on mobile */}
         <div
-          className="hidden md:block w-16 flex-shrink-0 bg-white border-l border-slate-200"
+          className="hidden md:block w-16 flex-shrink-0 bg-white"
           style={{ position: 'sticky', right: 0, zIndex: 10 }}
         >
-          {Array.from({ length: TOTAL_SLOTS }).map((_, i) => (
+          {Array.from({ length: TOTAL_SLOTS + 1 }).map((_, i) => (
             <div
               key={i}
               className="flex items-start justify-start pl-3"
-              style={{ height: SLOT_H }}
+              style={{ height: i < TOTAL_SLOTS ? SLOT_H : 0 }}
             >
               <span className={cn(
                 '-translate-y-2',

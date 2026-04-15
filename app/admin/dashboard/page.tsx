@@ -11,17 +11,7 @@ const STAFF: StaffMember[] = [
   { id: 'anar', name: 'Анар', role: 'помощник' },
 ]
 
-const MOCK_APPOINTMENTS: Appointment[] = [
-  {
-    id: '1',
-    clientName: 'Иван',
-    startHour: 10,
-    startMin: 0,
-    durationMin: 30,
-    status: 'new',
-    staffId: 'anar',
-  },
-]
+const MOCK_APPOINTMENTS: Appointment[] = []
 // ───────────────────────────────────────────────────────────────────────────
 
 const ADMIN_LOGIN = 'magzhan'
