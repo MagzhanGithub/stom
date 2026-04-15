@@ -59,7 +59,7 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
   return (
     // Single scrollable container — both time columns scroll with the grid
     <div className="h-full overflow-auto">
-      <div className="flex pt-3" style={{ height: gridHeight + 12, minWidth: 'max-content' }}>
+      <div className="flex pt-8" style={{ height: gridHeight + 32, minWidth: 'max-content' }}>
 
         {/* Left time column — sticky left */}
         <div
@@ -102,7 +102,7 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
                 >
                   {i % 2 === 0
                     ? <div className="h-px bg-slate-200 w-full" />
-                    : <div className="h-px bg-slate-200" style={{ width: 12 }} />
+                    : <div className="w-full border-t border-dashed border-slate-200" />
                   }
                 </div>
               ))}
@@ -142,9 +142,9 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
           )
         })}
 
-        {/* Right time column — sticky right */}
+        {/* Right time column — sticky right, hidden on mobile */}
         <div
-          className="w-16 flex-shrink-0 bg-white border-l border-slate-200"
+          className="hidden md:block w-16 flex-shrink-0 bg-white border-l border-slate-200"
           style={{ position: 'sticky', right: 0, zIndex: 10 }}
         >
           {Array.from({ length: TOTAL_SLOTS }).map((_, i) => (

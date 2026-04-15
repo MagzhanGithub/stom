@@ -89,11 +89,19 @@ export default function AdminDashboardPage() {
         />
 
         {/* Schedule */}
-        <div className="flex-1 overflow-hidden bg-white">
+        <div className="flex-1 overflow-hidden bg-white relative">
           <ScheduleGrid
             staff={STAFF}
             appointments={MOCK_APPOINTMENTS}
           />
+          {/* Mobile: floating Сегодня button */}
+          <button
+            onClick={() => setSelectedDate(new Date())}
+            className="md:hidden fixed bottom-5 right-4 px-4 py-2 bg-white border border-slate-200
+                       rounded-full text-sm font-medium text-slate-700 shadow-lg z-30"
+          >
+            Сегодня
+          </button>
         </div>
       </div>
 

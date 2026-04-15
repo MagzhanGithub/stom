@@ -3,14 +3,15 @@
 import { ChevronLeft, ChevronRight, Filter, Search, Users, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const WEEKDAYS_RU = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота']
-const MONTHS_RU   = [
-  'января','февраля','марта','апреля','мая','июня',
-  'июля','августа','сентября','октября','ноября','декабря',
-]
+const WEEKDAYS_RU  = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота']
+const MONTHS_RU    = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря']
+const MONTHS_SHORT = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек']
 
 function formatDate(d: Date) {
   return `${d.getDate()} ${MONTHS_RU[d.getMonth()]}, ${WEEKDAYS_RU[d.getDay()]}`
+}
+function formatDateShort(d: Date) {
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
 }
 
 type ViewMode = 'day' | 'week'
@@ -44,9 +45,10 @@ export default function DashboardHeader({
         </button>
 
         <div className="flex items-center gap-1">
+          {/* Сегодня — hidden on mobile (shown as floating button in schedule) */}
           <button
             onClick={onToday}
-            className="px-3 h-8 text-sm font-medium text-slate-700 border border-slate-200
+            className="hidden md:block px-3 h-8 text-sm font-medium text-slate-700 border border-slate-200
                        rounded-lg hover:bg-slate-50 transition-colors"
           >
             Сегодня
@@ -65,18 +67,20 @@ export default function DashboardHeader({
           </button>
         </div>
 
-        <span className="text-sm font-semibold text-slate-800">{formatDate(selectedDate)}</span>
+        {/* Full date on desktop, short on mobile */}
+        <span className="hidden md:block text-sm font-semibold text-slate-800">{formatDate(selectedDate)}</span>
+        <span className="md:hidden text-sm font-semibold text-slate-800">{formatDateShort(selectedDate)}</span>
       </div>
 
-      {/* Right: controls */}
+      {/* Right: controls — some hidden on mobile */}
       <div className="flex items-center gap-2">
-        <button className="px-3 h-8 text-sm font-medium text-slate-700 border border-slate-200
-                           rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5">
+        <button className="hidden md:flex px-3 h-8 text-sm font-medium text-slate-700 border border-slate-200
+                           rounded-lg hover:bg-slate-50 transition-colors items-center gap-1.5">
           Продать
           <ChevronRight className="w-3 h-3 rotate-90" />
         </button>
 
-        <span className="text-sm font-medium text-slate-600 px-2">0 Т</span>
+        <span className="hidden md:block text-sm font-medium text-slate-600 px-2">0 Т</span>
 
         <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
           <button
@@ -103,16 +107,16 @@ export default function DashboardHeader({
           </button>
         </div>
 
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
+        <button className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
           <Filter className="w-4 h-4" />
         </button>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
+        <button className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
           <Search className="w-4 h-4" />
         </button>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
+        <button className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
           <Users className="w-4 h-4" />
         </button>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
+        <button className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
           <LayoutGrid className="w-4 h-4" />
         </button>
       </div>
