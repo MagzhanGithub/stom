@@ -76,7 +76,7 @@ export default function Header() {
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-4">
               <Link
-                href="/admin"
+                href="/admin/login"
                 className="flex items-center gap-2 text-sm font-heading font-semibold text-text-secondary
                            hover:text-brand-dark transition-colors duration-150"
                 aria-label="Войти в панель управления"

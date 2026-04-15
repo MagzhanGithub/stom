@@ -56,7 +56,9 @@ export default function CalendarWidget({ selectedDate, onSelect }: Props) {
     })
   }
 
-  const cells = getCalendarDays(view.year, view.month)
+  const allCells = getCalendarDays(view.year, view.month)
+  // Only show 6th row if it contains at least one day of the current month
+  const cells = allCells.slice(35).some(c => c.current) ? allCells : allCells.slice(0, 35)
 
   return (
     <div className="px-3 py-2">

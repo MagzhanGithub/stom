@@ -59,7 +59,7 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
   return (
     // Single scrollable container — both time columns scroll with the grid
     <div className="h-full overflow-auto">
-      <div className="flex" style={{ height: gridHeight, minWidth: 'max-content' }}>
+      <div className="flex pt-3" style={{ height: gridHeight + 12, minWidth: 'max-content' }}>
 
         {/* Left time column — sticky left */}
         <div
@@ -73,8 +73,7 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
               style={{ height: SLOT_H }}
             >
               <span className={cn(
-                // First slot: don't shift up so 09:00 stays visible
-                i === 0 ? 'translate-y-0.5' : '-translate-y-2',
+                '-translate-y-2',
                 i % 2 === 0
                   ? 'text-[11px] text-slate-500 font-medium'
                   : 'text-[10px] text-slate-300',
@@ -94,16 +93,18 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
               className="flex-1 border-l border-slate-200"
               style={{ minWidth: 320, position: 'relative', height: gridHeight }}
             >
-              {/* Grid rows */}
-              {Array.from({ length: TOTAL_SLOTS }).map((_, i) => (
+              {/* Grid lines: full line for hours, short dash for half-hours */}
+              {Array.from({ length: TOTAL_SLOTS + 1 }).map((_, i) => (
                 <div
                   key={i}
-                  className={cn(
-                    'absolute left-0 right-0 border-b',
-                    i % 2 === 0 ? 'border-slate-200' : 'border-dashed border-slate-100',
-                  )}
-                  style={{ top: i * SLOT_H, height: SLOT_H }}
-                />
+                  className="absolute left-0 right-0"
+                  style={{ top: i * SLOT_H, height: 1 }}
+                >
+                  {i % 2 === 0
+                    ? <div className="h-px bg-slate-200 w-full" />
+                    : <div className="h-px bg-slate-200" style={{ width: 12 }} />
+                  }
+                </div>
               ))}
 
               {/* Appointment cards */}
@@ -153,7 +154,7 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
               style={{ height: SLOT_H }}
             >
               <span className={cn(
-                i === 0 ? 'translate-y-0.5' : '-translate-y-2',
+                '-translate-y-2',
                 i % 2 === 0
                   ? 'text-[11px] text-slate-500 font-medium'
                   : 'text-[10px] text-slate-300',

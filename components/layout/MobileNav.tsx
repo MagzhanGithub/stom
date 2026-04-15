@@ -80,7 +80,7 @@ export default function MobileNav({ id, isOpen, links, onClose }: MobileNavProps
 
         <div className="p-6 border-t border-border space-y-4">
           <Link
-            href="/admin"
+            href="/admin/login"
             onClick={onClose}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-body font-heading font-medium
                        text-text-primary hover:bg-surface-2 transition-colors duration-150"
