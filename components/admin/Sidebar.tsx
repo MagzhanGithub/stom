@@ -29,7 +29,7 @@ export default function Sidebar({ selectedDate, onDateChange, adminLogin }: Prop
   async function handleLogout() {
     setLoggingOut(true)
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/admin/login')
+    router.push('/')
   }
 
   return (

@@ -15,7 +15,7 @@ No test suite is configured. Type-check before committing. ESLint runs during `n
 
 ## Stack
 
-Next.js 14 App Router · TypeScript strict · Tailwind CSS v3 · Framer Motion v11 · Lucide React
+Next.js 14 App Router · TypeScript strict · Tailwind CSS v3 · Framer Motion v11 · Lucide React · jose (JWT)
 
 ## Architecture
 
@@ -97,13 +97,33 @@ Named variants work normally: `brand-dark`, `brand-lighter`, `navy-light`, `cta-
 
 `components/JsonLd.tsx` is rendered in `app/layout.tsx` and outputs LocalBusiness, FAQPage, and ServiceList JSON-LD for all pages.
 
+### Site layout vs Admin layout
+
+`components/layout/SiteChrome.tsx` is a `'use client'` wrapper that checks `usePathname()`. On `/admin/*` routes it renders only the children (no Header/Footer/MobileBottomBar). On all other routes it renders the full site chrome.
+
 ### Header layout
 
-**Desktop**: logo → nav links → phone number → "Записаться" button. No social icons.
+**Desktop**: logo → nav links → "Войти" link (`/admin/login`). Phone + "Записаться" were removed; they remain in `MobileBottomBar` and hero CTA only.
 
-**Mobile**: logo → phone icon (`tel:` link) → hamburger. `MobileBottomBar` (fixed, `md:hidden`) shows WhatsApp + "Записаться".
+**Mobile**: logo → phone icon (`tel:` link) → hamburger. `MobileBottomBar` (fixed, `md:hidden`) shows WhatsApp + "Записаться". Mobile nav sidebar has a "Войти" link at the bottom.
 
-`ContactLinks` component exists but is **not** used in the header or CTA sections — it's available for other placement if needed.
+### Admin panel (`/admin/*`)
+
+Single-admin JWT auth via `jose`. Credentials stored in env vars `ADMIN_LOGIN` / `ADMIN_PASSWORD` (fallback hardcoded for dev). JWT secret in `JWT_SECRET`.
+
+**Auth flow:**
+- `POST /api/auth/login` — validates credentials, sets `admin_token` httpOnly cookie (8h, HS256 JWT)
+- `POST /api/auth/logout` — clears the cookie, redirects to `/`
+- `middleware.ts` — protects `/admin/dashboard` routes; redirects unauthenticated to `/admin/login`
+- "Войти" links go directly to `/admin/login` (never to `/admin`) so the login form always shows
+
+**Admin components** (`components/admin/`):
+- `Sidebar.tsx` — dark sidebar (`bg-[#1e1f2d]`): mini calendar, quick actions grid, Избранное, user+logout. On mobile: hidden by default, opens as fixed overlay with backdrop.
+- `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days.
+- `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. On mobile: abbreviated date ("16 апр"), Продать/filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
+- `ScheduleGrid.tsx` — time grid 09:00–18:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Right time column hidden on mobile (`hidden md:block`). Staff columns fill viewport on mobile (`min-w-0 md:min-w-[320px]`).
+
+**Mobile sidebar toggle:** `isMobile` state (from `useEffect` + resize listener) controls whether sidebar is a flex item (desktop) or a fixed overlay (mobile).
 
 ### Images
 

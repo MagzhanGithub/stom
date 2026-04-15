@@ -59,7 +59,7 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
   return (
     // Single scrollable container — both time columns scroll with the grid
     <div className="h-full overflow-auto">
-      <div className="flex pt-8" style={{ height: gridHeight + 32, minWidth: 'max-content' }}>
+      <div className="flex pt-8 w-full md:min-w-max" style={{ height: gridHeight + 32 }}>
 
         {/* Left time column — sticky left */}
         <div
@@ -90,8 +90,8 @@ export default function ScheduleGrid({ staff, appointments }: Props) {
           return (
             <div
               key={member.id}
-              className="flex-1 border-l border-slate-200"
-              style={{ minWidth: 320, position: 'relative', height: gridHeight }}
+              className="flex-1 min-w-0 md:min-w-[320px] border-l border-slate-200"
+              style={{ position: 'relative', height: gridHeight }}
             >
               {/* Grid lines: full line for hours, short dash for half-hours */}
               {Array.from({ length: TOTAL_SLOTS + 1 }).map((_, i) => (
