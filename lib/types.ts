@@ -79,7 +79,6 @@ export interface ClinicConfig {
   email?: string
   coordinates: { lat: number; lng: number }
   mapEmbedSrc?: string
-  altegioBookingUrl?: string
   hours: WorkingHours[]
   foundedYear: number
   patientsCount: string

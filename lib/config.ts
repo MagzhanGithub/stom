@@ -15,7 +15,6 @@ export const clinic = {
   siteUrl:           'https://zhanardent.kz',   // TODO: заменить на реальный домен
   coordinates:       { lat: 42.3209, lng: 69.5862 },
   mapEmbedSrc:       'https://maps.google.com/maps?q=9J9V%2B3QR+Shymkent&z=17&output=embed',
-  altegioBookingUrl: 'https://n199267.alteg.io/company/199796/create-record/record?o=m2177587s6748897d2618041800',
   foundedYear:       2015,
   patientsCount:     '3 000+',
   googleRating:      4.9,

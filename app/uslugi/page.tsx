@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import Container from '@/components/ui/Container'
-import AltegioBookingModal from '@/components/sections/AltegioBookingModal'
+import BookingModal from '@/components/sections/BookingModal'
 import CTAButton from '@/components/sections/CTAButton'
 import { services } from '@/lib/services'
 import { clinic } from '@/lib/config'
@@ -67,7 +67,7 @@ export default function UslugiPage() {
         </Container>
       </section>
 
-      <AltegioBookingModal />
+      <BookingModal />
     </>
   )
 }

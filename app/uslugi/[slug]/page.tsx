@@ -4,7 +4,7 @@ import { Check }          from 'lucide-react'
 import Container          from '@/components/ui/Container'
 import SectionHeading     from '@/components/ui/SectionHeading'
 import CTAButton          from '@/components/sections/CTAButton'
-import AltegioBookingModal from '@/components/sections/AltegioBookingModal'
+import BookingModal       from '@/components/sections/BookingModal'
 import { services, getServiceBySlug } from '@/lib/services'
 import { clinic }         from '@/lib/config'
 
@@ -128,7 +128,7 @@ export default function ServicePage({ params }: Props) {
         </Container>
       </section>
 
-      <AltegioBookingModal />
+      <BookingModal />
     </>
   )
 }

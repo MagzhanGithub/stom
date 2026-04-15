@@ -9,7 +9,7 @@ import PricingSection     from '@/components/sections/PricingSection'
 import FAQSection         from '@/components/sections/FAQSection'
 import MapSection         from '@/components/sections/MapSection'
 import FinalCTASection    from '@/components/sections/FinalCTASection'
-import AltegioBookingModal from '@/components/sections/AltegioBookingModal'
+import BookingModal       from '@/components/sections/BookingModal'
 
 export default function HomePage() {
   return (
@@ -25,7 +25,7 @@ export default function HomePage() {
       <FAQSection />
       <MapSection />
       <FinalCTASection />
-      <AltegioBookingModal />
+      <BookingModal />
     </>
   )
 }

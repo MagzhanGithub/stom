@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import MapSection        from '@/components/sections/MapSection'
-import AltegioBookingModal from '@/components/sections/AltegioBookingModal'
+import BookingModal      from '@/components/sections/BookingModal'
 import { clinic }        from '@/lib/config'
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default function KontaktyPage() {
         </div>
       </div>
       <MapSection />
-      <AltegioBookingModal />
+      <BookingModal />
     </>
   )
 }
