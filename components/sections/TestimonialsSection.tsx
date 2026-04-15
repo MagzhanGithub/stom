@@ -7,7 +7,6 @@ import Container from '@/components/ui/Container'
 import SectionHeading from '@/components/ui/SectionHeading'
 import { cn } from '@/lib/utils'
 import { reviews } from '@/lib/reviews'
-import { clinic } from '@/lib/config'
 
 export default function TestimonialsSection() {
   const [current, setCurrent] = useState(0)
@@ -104,17 +103,6 @@ export default function TestimonialsSection() {
             </button>
           </div>
 
-          {/* Google link */}
-          <p className="text-center mt-6 text-body-sm text-white/60">
-            <span className="flex items-center justify-center gap-1.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
-              ))}
-              <span>
-                {clinic.googleRating} · {clinic.googleReviewsCount} отзывов на Google
-              </span>
-            </span>
-          </p>
         </div>
       </Container>
     </section>

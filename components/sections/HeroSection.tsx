@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import { ShieldCheck } from 'lucide-react'
 import Container from '@/components/ui/Container'
-import { clinic } from '@/lib/config'
 import HeroBookingButton from './HeroBookingButton'
 
 export default function HeroSection() {
@@ -35,13 +34,6 @@ export default function HeroSection() {
               Здоровая улыбка без страха{' '}
               <span className="text-gradient">и боли</span>
             </h1>
-
-            <p className="text-body-lg text-text-secondary mb-8 max-w-lg">
-              Современная клиника&nbsp;
-              <strong className="text-navy font-semibold">{clinic.name}</strong>
-              &nbsp;на&nbsp;{clinic.address}.
-              Бесплатный осмотр для новых пациентов — без очередей и скрытых доплат.
-            </p>
 
             {/* CTA row */}
             <div className="flex flex-col sm:flex-row gap-3 mb-8">

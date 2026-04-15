@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Award, GraduationCap, Star } from 'lucide-react'
 import Container from '@/components/ui/Container'
 import SectionHeading from '@/components/ui/SectionHeading'
-import CTAButton from './CTAButton'
+
 import { fadeUp, fadeIn, staggerContainer, viewportOnce } from '@/lib/animations'
 
 const doctor = {
@@ -96,7 +96,6 @@ export default function DoctorSection() {
               ))}
             </ul>
 
-            <CTAButton size="md">Записаться к врачу</CTAButton>
           </motion.div>
         </motion.div>
       </Container>

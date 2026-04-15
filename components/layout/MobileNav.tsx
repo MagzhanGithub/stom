@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import { X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import Button from '@/components/ui/Button'
 import ContactLinks from '@/components/ui/ContactLinks'
 
 interface NavLink { href: string; label: string }
@@ -43,7 +43,20 @@ export default function MobileNav({ id, isOpen, links, onClose }: MobileNavProps
           isOpen ? 'translate-x-0' : 'translate-x-full',
         )}
       >
-        <div className="flex-1 overflow-y-auto p-6 pt-20">
+        {/* Header row with X close button */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <span className="text-body font-heading font-semibold text-navy">Меню</span>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full hover:bg-surface-2 flex items-center justify-center
+                       text-text-muted hover:text-navy transition-colors duration-150"
+            aria-label="Закрыть меню"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
           <ul className="space-y-1">
             {links.map(link => (
               <li key={link.href}>
@@ -65,17 +78,7 @@ export default function MobileNav({ id, isOpen, links, onClose }: MobileNavProps
           </ul>
         </div>
 
-        <div className="p-6 border-t border-border space-y-3">
-          <Button
-            fullWidth
-            onClick={() => {
-              onClose()
-              const event = new CustomEvent('open-booking-modal')
-              window.dispatchEvent(event)
-            }}
-          >
-            Записаться онлайн
-          </Button>
+        <div className="p-6 border-t border-border">
           <ContactLinks iconsOnly className="justify-center" />
         </div>
       </nav>
