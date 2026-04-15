@@ -28,7 +28,6 @@ const START_HOUR  = 9
 const END_HOUR    = 19
 const SLOT_MIN    = 30          // minutes per row
 const SLOT_H      = 48          // px per slot (30 min)
-const HOUR_H      = SLOT_H * 2  // px per hour
 
 const STATUS_COLORS: Record<Appointment['status'], string> = {
   new:       'bg-emerald-400 border-emerald-500',
