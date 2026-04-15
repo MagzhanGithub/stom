@@ -2,10 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, UserCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { clinic } from '@/lib/config'
-import Button from '@/components/ui/Button'
 import MobileNav from '@/components/layout/MobileNav'
 
 const navLinks = [
@@ -76,14 +75,15 @@ export default function Header() {
 
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-4">
-              <a
-                href={`tel:${clinic.phone}`}
-                className="text-sm font-heading font-semibold text-text-primary hover:text-brand-dark transition-colors duration-150"
-                aria-label={`Позвонить: ${clinic.phoneDisplay}`}
+              <Link
+                href="/admin"
+                className="flex items-center gap-2 text-sm font-heading font-semibold text-text-secondary
+                           hover:text-brand-dark transition-colors duration-150"
+                aria-label="Войти в панель управления"
               >
-                {clinic.phoneDisplay}
-              </a>
-              <BookingButton />
+                <UserCircle2 className="w-5 h-5" aria-hidden="true" />
+                Войти
+              </Link>
             </div>
 
             {/* Mobile: phone icon + hamburger */}
@@ -131,16 +131,3 @@ export default function Header() {
   )
 }
 
-function BookingButton() {
-  return (
-    <Button
-      size="sm"
-      onClick={() => {
-        const event = new CustomEvent('open-booking-modal')
-        window.dispatchEvent(event)
-      }}
-    >
-      Записаться
-    </Button>
-  )
-}

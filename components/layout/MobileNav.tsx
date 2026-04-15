@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { X } from 'lucide-react'
+import { X, UserCircle2 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import ContactLinks from '@/components/ui/ContactLinks'
@@ -78,7 +78,16 @@ export default function MobileNav({ id, isOpen, links, onClose }: MobileNavProps
           </ul>
         </div>
 
-        <div className="p-6 border-t border-border">
+        <div className="p-6 border-t border-border space-y-4">
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-body font-heading font-medium
+                       text-text-primary hover:bg-surface-2 transition-colors duration-150"
+          >
+            <UserCircle2 className="w-5 h-5 text-text-muted" aria-hidden="true" />
+            Войти
+          </Link>
           <ContactLinks iconsOnly className="justify-center" />
         </div>
       </nav>
