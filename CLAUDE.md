@@ -43,22 +43,22 @@ window.addEventListener('open-booking-modal', handler)
 
 `components/sections/CTAButton.tsx` and `components/sections/HeroBookingButton.tsx` are thin `'use client'` wrappers that fire the event, allowing parent sections to stay as Server Components.
 
-### Booking → WhatsApp flow
+### Booking → WhatsApp + API flow
 
-`BookingModal` (4-step form) sends booking data to the clinic's WhatsApp on submit:
-
+`BookingModal` (4-step form) on submit:
+1. Opens clinic WhatsApp via anchor click (more reliable than `window.open` on mobile):
 ```ts
-// submit() builds a wa.me URL with encoded message, then:
 const a = document.createElement('a')
 a.href = waUrl   // https://wa.me/77074289598?text=...
 a.target = '_blank'
-document.body.appendChild(a)
-a.click()        // anchor click is more reliable than window.open on mobile
-document.body.removeChild(a)
-setStep(4)       // show success screen
+document.body.appendChild(a); a.click(); document.body.removeChild(a)
 ```
+2. POSTs booking data to `POST /api/bookings` (so admin dashboard receives it)
+3. `setStep(4)` — shows success screen
 
 `formatDate(iso)` in `BookingModal.tsx` converts `YYYY-MM-DD` → `DD.MM.YYYY` for display.
+
+Step 2 (date selection) uses an inline calendar (not `<input type="date">`). Sundays are disabled. Saturdays only show slots up to 12:30. Past time slots are disabled when today is selected. Already-confirmed slots are fetched and disabled to prevent double-booking.
 
 ### Server vs Client components
 
@@ -118,12 +118,37 @@ Single-admin JWT auth via `jose`. Credentials stored in env vars `ADMIN_LOGIN` /
 - "Войти" links go directly to `/admin/login` (never to `/admin`) so the login form always shows
 
 **Admin components** (`components/admin/`):
-- `Sidebar.tsx` — dark sidebar (`bg-[#1e1f2d]`): mini calendar, quick actions grid, Избранное, user+logout. On mobile: hidden by default, opens as fixed overlay with backdrop.
-- `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days.
-- `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. On mobile: abbreviated date ("16 апр"), Продать/filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
-- `ScheduleGrid.tsx` — time grid 09:00–18:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Right time column hidden on mobile (`hidden md:block`). Staff columns fill viewport on mobile (`min-w-0 md:min-w-[320px]`).
+- `Sidebar.tsx` — dark sidebar (`bg-[#1e1f2d]`): mini calendar, quick actions grid, Избранное, user+logout. Bell icon shows red dot when there are unconfirmed bookings; clicking it opens the notification popup. On mobile: hidden by default, opens as fixed overlay with backdrop.
+- `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days. Syncs with header date nav via `useEffect` on `selectedDate` prop.
+- `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. Shows red dot on toggle button when sidebar is closed and there are unread notifications. On mobile: abbreviated date ("16 апр"), Продать/filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
+- `ScheduleGrid.tsx` — time grid 09:00–18:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time shown as a pill only (no horizontal line). Left and right time columns use `position: sticky`. Right time column hidden on mobile (`hidden md:block`). Staff columns fill viewport on mobile (`min-w-0 md:min-w-[320px]`).
 
 **Mobile sidebar toggle:** `isMobile` state (from `useEffect` + resize listener) controls whether sidebar is a flex item (desktop) or a fixed overlay (mobile).
+
+### Booking API and notification system
+
+`app/api/bookings/route.ts` — in-memory store (module-level array, resets on server restart; replace with Supabase/PostgreSQL for production).
+
+**Booking status flow:** `'new'` → `'dismissed'` (X button) or `'confirmed'` (Перейти к записи button)
+
+- `GET /api/bookings` — returns all bookings
+- `POST /api/bookings` — creates new booking (`BookingEntry`), status starts as `'new'`
+- `PATCH /api/bookings` — updates status by `id`
+
+**Dashboard polling:** `useEffect` polls every 3s. `shownIdsRef` (`useRef<Set<string>>`) tracks which booking IDs have already triggered a popup this session (avoids re-showing without causing re-renders).
+
+**Notification popup** (`page.tsx`):
+- Shows for `status === 'new'` bookings not yet in `shownIdsRef`
+- X button → PATCH to `'dismissed'`; red dot on bell stays until confirmed
+- "Перейти к записи" → PATCH to `'confirmed'`; navigates to booking date
+- Position: `left: 228px` on desktop when sidebar open, else `left: 16px`
+- X: always visible on mobile, hover-only on desktop (`md:opacity-0 md:group-hover:opacity-100`)
+
+**Schedule grid** only shows `status === 'confirmed'` bookings. Unconfirmed bookings are invisible in the grid.
+
+**Double-booking prevention:** `BookingModal` fetches `/api/bookings` on date change, disables time slots where a `'confirmed'` booking already exists for that date.
+
+**Booking window:** clients can book up to **90 days** ahead. Calendar next-month nav is disabled once the 90-day boundary month is reached.
 
 ### Images
 
