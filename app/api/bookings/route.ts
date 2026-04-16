@@ -1,3 +1,5 @@
+import { getSupabase } from '@/lib/supabase'
+
 export interface BookingEntry {
   id: string
   clientName: string
@@ -11,12 +13,13 @@ export interface BookingEntry {
   status: 'new' | 'dismissed' | 'confirmed'
 }
 
-// Module-level in-memory store — persists within same Node.js process.
-// Replace with Supabase/PostgreSQL in production.
-const bookings: BookingEntry[] = []
-
 export async function GET() {
-  return Response.json(bookings)
+  const { data, error } = await getSupabase()
+    .from('bookings')
+    .select('*')
+    .order('createdAt', { ascending: false })
+  if (error) return Response.json([], { status: 500 })
+  return Response.json(data)
 }
 
 export async function POST(req: Request) {
@@ -33,14 +36,18 @@ export async function POST(req: Request) {
     createdAt:  Date.now(),
     status:     'new',
   }
-  bookings.push(entry)
+  const { error } = await getSupabase().from('bookings').insert([entry])
+  if (error) return Response.json({ error: error.message }, { status: 500 })
   return Response.json(entry, { status: 201 })
 }
 
 // Update booking status: 'dismissed' (X clicked) or 'confirmed' (admin confirmed)
 export async function PATCH(req: Request) {
   const { id, status } = await req.json() as { id: string; status: BookingEntry['status'] }
-  const entry = bookings.find(b => b.id === id)
-  if (entry) entry.status = status
+  const { error } = await getSupabase()
+    .from('bookings')
+    .update({ status })
+    .eq('id', id)
+  if (error) return Response.json({ error: error.message }, { status: 500 })
   return Response.json({ ok: true })
 }
