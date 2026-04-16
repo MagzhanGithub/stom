@@ -41,7 +41,7 @@ export default function MobileBottomBar() {
         <button
           onClick={openBooking}
           className="flex-1 flex flex-col items-center justify-center gap-0.5
-                     bg-cta hover:bg-cta-hover text-white
+                     bg-[#1e1f2d] hover:bg-[#2a2b3d] text-white
                      transition-colors duration-150 active:scale-95"
           aria-label="Записаться на приём"
         >

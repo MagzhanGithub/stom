@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +40,11 @@ interface Props {
 export default function CalendarWidget({ selectedDate, onSelect }: Props) {
   const today = new Date()
   const [view, setView] = useState({ year: selectedDate.getFullYear(), month: selectedDate.getMonth() })
+
+  // Sync calendar view when selectedDate changes from outside (e.g. header nav)
+  useEffect(() => {
+    setView({ year: selectedDate.getFullYear(), month: selectedDate.getMonth() })
+  }, [selectedDate])
 
   function prev() {
     setView(v => {
