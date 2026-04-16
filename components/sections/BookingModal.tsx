@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { X, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
+import { X, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { services } from '@/lib/services'
@@ -26,8 +26,8 @@ function getCalendarDays(year: number, month: number) {
 }
 
 function isWeekend(year: number, month: number, day: number) {
-  const dow = new Date(year, month, day).getDay()
-  return dow === 0 || dow === 6
+  // Only Sunday is closed; Saturday works 09:00–13:00
+  return new Date(year, month, day).getDay() === 0
 }
 
 // ── Time slots ───────────────────────────────────────────────────────────────
@@ -132,6 +132,23 @@ export default function BookingModal() {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+
+    // Save booking to admin dashboard
+    try {
+      await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: form.name,
+          phone:      form.phone,
+          service:    service?.title ?? '—',
+          serviceId:  form.serviceId,
+          date:       form.date,
+          time:       form.time,
+          staffId:    'anar',
+        }),
+      })
+    } catch { /* non-blocking */ }
 
     setIsLoading(false)
     setStep(4)
@@ -242,12 +259,9 @@ export default function BookingModal() {
                 <div className="space-y-3">
                   {/* Month header */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-semibold text-navy">
-                        {MONTHS_CAL[calView.month]}
-                      </span>
-                      <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
-                    </div>
+                    <span className="text-sm font-semibold text-navy">
+                      {MONTHS_CAL[calView.month]}
+                    </span>
                     <div className="flex items-center gap-0.5">
                       <button
                         onClick={() => setCalView(v => {
@@ -321,33 +335,43 @@ export default function BookingModal() {
                     })}
                   </div>
 
-                  {/* Time groups — always visible */}
-                  <div className="space-y-3 pt-3 border-t border-border">
-                    {TIME_GROUPS.map(group => (
-                      <div key={group.label}>
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm font-semibold text-text-primary">{group.label}</p>
-                          <ChevronUp className="w-4 h-4 text-text-muted" />
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          {group.times.map(t => (
-                            <button
-                              key={t}
-                              onClick={() => update('time', t)}
-                              className={cn(
-                                'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
-                                form.time === t
-                                  ? 'bg-[#1e1f2d] border-[#1e1f2d] text-white'
-                                  : 'border-border hover:border-[#1e1f2d] hover:bg-slate-50 text-text-secondary',
-                              )}
-                            >
-                              {t}
-                            </button>
-                          ))}
-                        </div>
+                  {/* Time groups — always visible; Saturday capped at 12:30 */}
+                  {(() => {
+                    const isSat = form.date
+                      ? new Date(form.date + 'T00:00:00').getDay() === 6
+                      : false
+                    return (
+                      <div className="space-y-3 pt-3 border-t border-border">
+                        {TIME_GROUPS.map(group => {
+                          const times = isSat
+                            ? group.times.filter(t => t <= '12:30')
+                            : group.times
+                          if (times.length === 0) return null
+                          return (
+                            <div key={group.label}>
+                              <p className="text-sm font-semibold text-text-primary mb-2">{group.label}</p>
+                              <div className="grid grid-cols-3 gap-2">
+                                {times.map(t => (
+                                  <button
+                                    key={t}
+                                    onClick={() => update('time', t)}
+                                    className={cn(
+                                      'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
+                                      form.time === t
+                                        ? 'bg-[#1e1f2d] border-[#1e1f2d] text-white'
+                                        : 'border-border hover:border-[#1e1f2d] hover:bg-slate-50 text-text-secondary',
+                                    )}
+                                  >
+                                    {t}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
-                    ))}
-                  </div>
+                    )
+                  })()}
                 </div>
               )
             })()}

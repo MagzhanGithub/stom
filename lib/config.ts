@@ -20,8 +20,7 @@ export const clinic = {
   googleRating:      4.9,
   googleReviewsCount: 87,
   hours: [
-    { days: 'Понедельник – Пятница', hours: '09:00 – 20:00' },
-    { days: 'Суббота',               hours: '09:00 – 18:00' },
-    { days: 'Воскресенье',           hours: '10:00 – 16:00' },
+    { days: 'Понедельник – Пятница', hours: '09:00 – 18:00' },
+    { days: 'Суббота',               hours: '09:00 – 13:00' },
   ],
 } satisfies ClinicConfig

@@ -19,9 +19,10 @@ interface Props {
   selectedDate: Date
   onDateChange: (d: Date) => void
   adminLogin: string
+  hasNotification?: boolean
 }
 
-export default function Sidebar({ selectedDate, onDateChange, adminLogin }: Props) {
+export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNotification }: Props) {
   const router = useRouter()
   const [favOpen, setFavOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -43,6 +44,9 @@ export default function Sidebar({ selectedDate, onDateChange, adminLogin }: Prop
           aria-label="Уведомления"
         >
           <Bell className="w-5 h-5" />
+          {hasNotification && (
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+          )}
         </button>
       </div>
 

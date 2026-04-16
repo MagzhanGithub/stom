@@ -1,20 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { X, Smartphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Sidebar from '@/components/admin/Sidebar'
 import DashboardHeader from '@/components/admin/DashboardHeader'
 import ScheduleGrid, { type Appointment, type StaffMember } from '@/components/admin/ScheduleGrid'
+import type { BookingEntry } from '@/app/api/bookings/route'
 
-// ── Mock data (заменить на реальные данные из БД) ──────────────────────────
+// ── Staff ──────────────────────────────────────────────────────────────────
 const STAFF: StaffMember[] = [
   { id: 'anar', name: 'Анар', role: 'помощник' },
 ]
 
-const MOCK_APPOINTMENTS: Appointment[] = []
-// ───────────────────────────────────────────────────────────────────────────
-
 const ADMIN_LOGIN = 'magzhan'
+
+const MONTHS_FULL = [
+  'января','февраля','марта','апреля','мая','июня',
+  'июля','августа','сентября','октября','ноября','декабря',
+]
 
 function addDays(date: Date, days: number) {
   const d = new Date(date)
@@ -22,11 +26,22 @@ function addDays(date: Date, days: number) {
   return d
 }
 
+function formatNotifDate(iso: string) {
+  const [y, m, d] = iso.split('-')
+  return `${parseInt(d)} ${MONTHS_FULL[parseInt(m) - 1]} ${y}`
+}
+
 export default function AdminDashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [viewMode,     setViewMode]     = useState<'day' | 'week'>('day')
   const [sidebarOpen,  setSidebarOpen]  = useState(true)
   const [isMobile,     setIsMobile]     = useState(false)
+
+  // Bookings + notifications
+  const [bookings,       setBookings]       = useState<BookingEntry[]>([])
+  const [notification,   setNotification]   = useState<BookingEntry | null>(null)
+  const [hasUnread,      setHasUnread]      = useState(false)
+  const seenIdsRef = useRef(new Set<string>())
 
   // Auto-hide sidebar on mobile
   useEffect(() => {
@@ -40,10 +55,62 @@ export default function AdminDashboardPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
+  // Poll /api/bookings every 3 seconds
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/bookings')
+        if (!res.ok) return
+        const data: BookingEntry[] = await res.json()
+        setBookings(data)
+        const unseen = data.filter(b => !seenIdsRef.current.has(b.id))
+        if (unseen.length > 0) {
+          setNotification(unseen[unseen.length - 1]!)
+          setHasUnread(true)
+        }
+      } catch { /* ignore */ }
+    }
+    poll()
+    const interval = setInterval(poll, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  function dismissNotification() {
+    if (notification) {
+      seenIdsRef.current.add(notification.id)
+      setNotification(null)
+      const remaining = bookings.filter(b => !seenIdsRef.current.has(b.id))
+      if (remaining.length === 0) setHasUnread(false)
+    }
+  }
+
+  function goToBooking(booking: BookingEntry) {
+    const date = new Date(booking.date + 'T00:00:00')
+    setSelectedDate(date)
+    dismissNotification()
+  }
+
+  // Convert bookings to appointments for the selected date
+  const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`
+  const dayAppointments: Appointment[] = bookings
+    .filter(b => b.date === dateStr)
+    .map(b => {
+      const [h, m] = b.time.split(':').map(Number)
+      return {
+        id:          b.id,
+        clientName:  b.clientName,
+        startHour:   h!,
+        startMin:    m!,
+        durationMin: 30,
+        status:      'new' as const,
+        staffId:     b.staffId,
+      }
+    })
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 relative">
 
-      {/* Mobile backdrop — tap to close sidebar */}
+      {/* Mobile backdrop */}
       {isMobile && sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40"
@@ -56,13 +123,13 @@ export default function AdminDashboardPage() {
         'h-full transition-transform duration-300 ease-out z-50',
         isMobile ? 'fixed inset-y-0 left-0' : 'relative flex-shrink-0',
         !sidebarOpen && '-translate-x-full',
-        // On desktop, when closed collapse width so main content fills the space
         !isMobile && !sidebarOpen && 'hidden',
       )}>
         <Sidebar
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
           adminLogin={ADMIN_LOGIN}
+          hasNotification={hasUnread}
         />
       </div>
 
@@ -82,8 +149,10 @@ export default function AdminDashboardPage() {
         <div className="flex-1 overflow-hidden bg-white relative">
           <ScheduleGrid
             staff={STAFF}
-            appointments={MOCK_APPOINTMENTS}
+            appointments={dayAppointments}
+            selectedDate={selectedDate}
           />
+
           {/* Mobile: floating Сегодня button */}
           <button
             onClick={() => setSelectedDate(new Date())}
@@ -94,6 +163,47 @@ export default function AdminDashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* New booking notification popup */}
+      {notification && (
+        <div className="group fixed bottom-6 left-4 z-50 w-72 bg-[#1e1f2d] rounded-2xl p-4 shadow-2xl">
+          {/* X button — visible on hover */}
+          <button
+            onClick={dismissNotification}
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100
+                       transition-opacity text-white/40 hover:text-white"
+            aria-label="Закрыть уведомление"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+              <Smartphone className="w-4 h-4 text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white mb-1">Новая запись</p>
+              <div className="space-y-0.5 text-xs text-white/70">
+                <p>Клиент: {notification.clientName}</p>
+                <p>Телефон: {notification.phone}</p>
+                <p>Услуга: {notification.service}</p>
+                <p>Сотрудник: {STAFF.find(s => s.id === notification.staffId)?.name ?? notification.staffId}</p>
+                {notification.date && notification.time && (
+                  <p>Время: {formatNotifDate(notification.date)} в {notification.time}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => goToBooking(notification)}
+            className="w-full py-2 bg-yellow-400 hover:bg-yellow-300 text-[#1e1f2d]
+                       text-sm font-bold rounded-xl transition-colors"
+          >
+            Перейти к записи
+          </button>
+        </div>
+      )}
 
     </div>
   )
