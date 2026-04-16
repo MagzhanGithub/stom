@@ -27,7 +27,7 @@ export async function GET() {
     .from('bookings')
     .select('*')
     .order('createdAt', { ascending: false })
-  if (error) return Response.json(memBookings)
+  if (error) return Response.json({ error: error.message }, { status: 500 })
   return Response.json(data)
 }
 
