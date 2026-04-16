@@ -68,6 +68,7 @@ export default function BookingModal() {
     serviceId: '', date: '', time: '', name: '', phone: '', comment: '', consent: false,
   })
   const [errors, setErrors]   = useState<Partial<Record<keyof FormData, string>>>({})
+  const [bookedTimes, setBookedTimes] = useState<string[]>([])
   const firstFocusRef         = useRef<HTMLButtonElement>(null)
   const todayDate             = new Date()
   const [calView, setCalView] = useState({ year: todayDate.getFullYear(), month: todayDate.getMonth() })
@@ -83,6 +84,19 @@ export default function BookingModal() {
   useEffect(() => {
     if (isOpen) setTimeout(() => firstFocusRef.current?.focus(), 50)
   }, [isOpen])
+
+  // Fetch confirmed bookings for the selected date → disable those slots
+  useEffect(() => {
+    if (!form.date) return
+    fetch('/api/bookings')
+      .then(r => r.json())
+      .then((data: { date: string; time: string; status: string }[]) => {
+        setBookedTimes(
+          data.filter(b => b.date === form.date && b.status === 'confirmed').map(b => b.time)
+        )
+      })
+      .catch(() => {})
+  }, [form.date])
 
   // Lock body scroll
   useEffect(() => {
@@ -342,7 +356,8 @@ export default function BookingModal() {
                       : false
                     const n = new Date()
                     const nowStr = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`
-                    const isPast = (t: string) => form.date === today && t <= nowStr
+                    const isPast   = (t: string) => form.date === today && t <= nowStr
+                    const isBooked = (t: string) => bookedTimes.includes(t)
 
                     return (
                       <div className="space-y-3 pt-3 border-t border-border">
@@ -356,16 +371,16 @@ export default function BookingModal() {
                               <p className="text-sm font-semibold text-text-primary mb-2">{group.label}</p>
                               <div className="grid grid-cols-3 gap-2">
                                 {times.map(t => {
-                                  const past = isPast(t)
+                                  const disabled = isPast(t) || isBooked(t)
                                   return (
                                     <button
                                       key={t}
-                                      disabled={past}
-                                      onClick={() => !past && update('time', t)}
+                                      disabled={disabled}
+                                      onClick={() => !disabled && update('time', t)}
                                       className={cn(
                                         'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
-                                        past
-                                          ? 'border-border text-slate-300 bg-slate-50 cursor-not-allowed'
+                                        disabled
+                                          ? 'border-border text-slate-300 bg-slate-50 cursor-not-allowed line-through'
                                           : form.time === t
                                             ? 'bg-[#1e1f2d] border-[#1e1f2d] text-white'
                                             : 'border-border hover:border-[#1e1f2d] hover:bg-slate-50 text-text-secondary',

@@ -24,24 +24,28 @@ interface Props {
   viewMode: ViewMode
   onViewChange: (v: ViewMode) => void
   onToggleSidebar: () => void
+  hasNotification?: boolean  // show red dot on toggle button when sidebar is hidden
 }
 
 export default function DashboardHeader({
   selectedDate, onPrev, onNext, onToday, viewMode, onViewChange,
-  onToggleSidebar,
+  onToggleSidebar, hasNotification,
 }: Props) {
   return (
     <header className="h-14 flex items-center justify-between px-4 bg-white border-b border-slate-200 flex-shrink-0">
 
       {/* Left: sidebar toggle + date navigation */}
       <div className="flex items-center gap-3">
-        {/* Sidebar toggle — always visible */}
+        {/* Sidebar toggle — shows red dot when sidebar hidden and there are unread notifications */}
         <button
           onClick={onToggleSidebar}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500"
+          className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500"
           aria-label="Показать/скрыть боковую панель"
         >
           <LayoutGrid className="w-4 h-4" />
+          {hasNotification && (
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+          )}
         </button>
 
         <div className="flex items-center gap-1">

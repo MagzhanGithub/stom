@@ -116,7 +116,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
           return (
             <div
               key={member.id}
-              className="flex-1 min-w-0 md:min-w-[320px] border-l border-slate-200"
+              className="flex-1 min-w-0 md:min-w-[320px] border-l border-r border-slate-200"
               style={{ position: 'relative', height: gridHeight }}
             >
               {/* Grid lines */}
@@ -163,11 +163,6 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
           )
         })}
 
-        {/* Right border for mobile — dedicated 1px element avoids viewport-edge clipping */}
-        <div
-          className="md:hidden w-px flex-shrink-0 bg-slate-200"
-          style={{ height: gridHeight }}
-        />
 
         {/* Right time column — sticky right, hidden on mobile */}
         <div

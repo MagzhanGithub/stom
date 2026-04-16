@@ -96,6 +96,14 @@ export default function AdminDashboardPage() {
     setNotification(null)
   }
 
+  // Bell click: show the latest unconfirmed booking as notification
+  function handleBellClick() {
+    const unconfirmed = bookings.filter(b => b.status === 'new' || b.status === 'dismissed')
+    if (unconfirmed.length > 0) {
+      setNotification(unconfirmed[unconfirmed.length - 1]!)
+    }
+  }
+
   // "Перейти к записи": confirm + navigate to that date
   async function confirmAndGo(booking: BookingEntry) {
     await patchBooking(booking.id, 'confirmed')
@@ -141,6 +149,7 @@ export default function AdminDashboardPage() {
           onDateChange={setSelectedDate}
           adminLogin={ADMIN_LOGIN}
           hasNotification={hasUnread}
+          onBellClick={handleBellClick}
         />
       </div>
 
@@ -154,6 +163,7 @@ export default function AdminDashboardPage() {
           viewMode={viewMode}
           onViewChange={setViewMode}
           onToggleSidebar={() => setSidebarOpen(v => !v)}
+          hasNotification={hasUnread && !sidebarOpen}
         />
 
         <div className="flex-1 overflow-hidden bg-white relative">

@@ -20,9 +20,10 @@ interface Props {
   onDateChange: (d: Date) => void
   adminLogin: string
   hasNotification?: boolean
+  onBellClick?: () => void
 }
 
-export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNotification }: Props) {
+export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNotification, onBellClick }: Props) {
   const router = useRouter()
   const [favOpen, setFavOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -40,6 +41,7 @@ export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNot
       <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
         <span className="font-heading font-extrabold text-lg text-white tracking-wide">dent</span>
         <button
+          onClick={onBellClick}
           className="relative text-slate-400 hover:text-white transition-colors"
           aria-label="Уведомления"
         >
