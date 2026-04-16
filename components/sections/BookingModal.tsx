@@ -335,11 +335,15 @@ export default function BookingModal() {
                     })}
                   </div>
 
-                  {/* Time groups — always visible; Saturday capped at 12:30 */}
+                  {/* Time groups — Saturday capped at 12:30; past times disabled */}
                   {(() => {
                     const isSat = form.date
                       ? new Date(form.date + 'T00:00:00').getDay() === 6
                       : false
+                    const n = new Date()
+                    const nowStr = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`
+                    const isPast = (t: string) => form.date === today && t <= nowStr
+
                     return (
                       <div className="space-y-3 pt-3 border-t border-border">
                         {TIME_GROUPS.map(group => {
@@ -351,20 +355,26 @@ export default function BookingModal() {
                             <div key={group.label}>
                               <p className="text-sm font-semibold text-text-primary mb-2">{group.label}</p>
                               <div className="grid grid-cols-3 gap-2">
-                                {times.map(t => (
-                                  <button
-                                    key={t}
-                                    onClick={() => update('time', t)}
-                                    className={cn(
-                                      'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
-                                      form.time === t
-                                        ? 'bg-[#1e1f2d] border-[#1e1f2d] text-white'
-                                        : 'border-border hover:border-[#1e1f2d] hover:bg-slate-50 text-text-secondary',
-                                    )}
-                                  >
-                                    {t}
-                                  </button>
-                                ))}
+                                {times.map(t => {
+                                  const past = isPast(t)
+                                  return (
+                                    <button
+                                      key={t}
+                                      disabled={past}
+                                      onClick={() => !past && update('time', t)}
+                                      className={cn(
+                                        'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
+                                        past
+                                          ? 'border-border text-slate-300 bg-slate-50 cursor-not-allowed'
+                                          : form.time === t
+                                            ? 'bg-[#1e1f2d] border-[#1e1f2d] text-white'
+                                            : 'border-border hover:border-[#1e1f2d] hover:bg-slate-50 text-text-secondary',
+                                      )}
+                                    >
+                                      {t}
+                                    </button>
+                                  )
+                                })}
                               </div>
                             </div>
                           )

@@ -8,7 +8,6 @@ import DashboardHeader from '@/components/admin/DashboardHeader'
 import ScheduleGrid, { type Appointment, type StaffMember } from '@/components/admin/ScheduleGrid'
 import type { BookingEntry } from '@/app/api/bookings/route'
 
-// ── Staff ──────────────────────────────────────────────────────────────────
 const STAFF: StaffMember[] = [
   { id: 'anar', name: 'Анар', role: 'помощник' },
 ]
@@ -21,14 +20,24 @@ const MONTHS_FULL = [
 ]
 
 function addDays(date: Date, days: number) {
-  const d = new Date(date)
-  d.setDate(d.getDate() + days)
-  return d
+  const d = new Date(date); d.setDate(d.getDate() + days); return d
+}
+
+function toDateStr(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
 function formatNotifDate(iso: string) {
   const [y, m, d] = iso.split('-')
-  return `${parseInt(d)} ${MONTHS_FULL[parseInt(m) - 1]} ${y}`
+  return `${parseInt(d!)} ${MONTHS_FULL[parseInt(m!) - 1]} ${y}`
+}
+
+async function patchBooking(id: string, status: BookingEntry['status']) {
+  await fetch('/api/bookings', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, status }),
+  }).catch(() => {})
 }
 
 export default function AdminDashboardPage() {
@@ -37,11 +46,12 @@ export default function AdminDashboardPage() {
   const [sidebarOpen,  setSidebarOpen]  = useState(true)
   const [isMobile,     setIsMobile]     = useState(false)
 
-  // Bookings + notifications
-  const [bookings,       setBookings]       = useState<BookingEntry[]>([])
-  const [notification,   setNotification]   = useState<BookingEntry | null>(null)
-  const [hasUnread,      setHasUnread]      = useState(false)
-  const seenIdsRef = useRef(new Set<string>())
+  const [bookings,     setBookings]     = useState<BookingEntry[]>([])
+  const [notification, setNotification] = useState<BookingEntry | null>(null)
+  const shownIdsRef = useRef(new Set<string>())  // IDs shown as popup this session
+
+  // hasUnread: any booking that is NOT yet confirmed
+  const hasUnread = bookings.some(b => b.status === 'new' || b.status === 'dismissed')
 
   // Auto-hide sidebar on mobile
   useEffect(() => {
@@ -63,37 +73,41 @@ export default function AdminDashboardPage() {
         if (!res.ok) return
         const data: BookingEntry[] = await res.json()
         setBookings(data)
-        const unseen = data.filter(b => !seenIdsRef.current.has(b.id))
+
+        // Show popup only for 'new' bookings not yet shown this session
+        const unseen = data.filter(b => b.status === 'new' && !shownIdsRef.current.has(b.id))
         if (unseen.length > 0) {
-          setNotification(unseen[unseen.length - 1]!)
-          setHasUnread(true)
+          const latest = unseen[unseen.length - 1]!
+          shownIdsRef.current.add(latest.id)
+          setNotification(latest)
         }
-      } catch { /* ignore */ }
+      } catch { /* ignore network errors */ }
     }
     poll()
     const interval = setInterval(poll, 3000)
     return () => clearInterval(interval)
   }, [])
 
-  function dismissNotification() {
-    if (notification) {
-      seenIdsRef.current.add(notification.id)
-      setNotification(null)
-      const remaining = bookings.filter(b => !seenIdsRef.current.has(b.id))
-      if (remaining.length === 0) setHasUnread(false)
-    }
+  // X button: mark as dismissed (don't show popup again), red dot stays
+  async function dismissNotification() {
+    if (!notification) return
+    await patchBooking(notification.id, 'dismissed')
+    setBookings(prev => prev.map(b => b.id === notification.id ? { ...b, status: 'dismissed' } : b))
+    setNotification(null)
   }
 
-  function goToBooking(booking: BookingEntry) {
-    const date = new Date(booking.date + 'T00:00:00')
-    setSelectedDate(date)
-    dismissNotification()
+  // "Перейти к записи": confirm + navigate to that date
+  async function confirmAndGo(booking: BookingEntry) {
+    await patchBooking(booking.id, 'confirmed')
+    setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, status: 'confirmed' } : b))
+    setSelectedDate(new Date(booking.date + 'T00:00:00'))
+    setNotification(null)
   }
 
-  // Convert bookings to appointments for the selected date
-  const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`
+  // Only show CONFIRMED bookings in the schedule grid
+  const dateStr = toDateStr(selectedDate)
   const dayAppointments: Appointment[] = bookings
-    .filter(b => b.date === dateStr)
+    .filter(b => b.status === 'confirmed' && b.date === dateStr)
     .map(b => {
       const [h, m] = b.time.split(':').map(Number)
       return {
@@ -102,7 +116,7 @@ export default function AdminDashboardPage() {
         startHour:   h!,
         startMin:    m!,
         durationMin: 30,
-        status:      'new' as const,
+        status:      'confirmed' as const,
         staffId:     b.staffId,
       }
     })
@@ -112,10 +126,7 @@ export default function AdminDashboardPage() {
 
       {/* Mobile backdrop */}
       {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
@@ -145,7 +156,6 @@ export default function AdminDashboardPage() {
           onToggleSidebar={() => setSidebarOpen(v => !v)}
         />
 
-        {/* Schedule */}
         <div className="flex-1 overflow-hidden bg-white relative">
           <ScheduleGrid
             staff={STAFF}
@@ -153,7 +163,7 @@ export default function AdminDashboardPage() {
             selectedDate={selectedDate}
           />
 
-          {/* Mobile: floating Сегодня button */}
+          {/* Mobile floating Сегодня */}
           <button
             onClick={() => setSelectedDate(new Date())}
             className="md:hidden fixed bottom-5 right-4 px-4 py-2 bg-white border border-slate-200
@@ -167,11 +177,13 @@ export default function AdminDashboardPage() {
       {/* New booking notification popup */}
       {notification && (
         <div className="group fixed bottom-6 left-4 z-50 w-72 bg-[#1e1f2d] rounded-2xl p-4 shadow-2xl">
-          {/* X button — visible on hover */}
+          {/* X: on desktop shows on hover; on mobile always visible */}
           <button
             onClick={dismissNotification}
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100
-                       transition-opacity text-white/40 hover:text-white"
+            className={cn(
+              'absolute top-3 right-3 transition-opacity text-white/40 hover:text-white',
+              'opacity-100 md:opacity-0 md:group-hover:opacity-100',
+            )}
             aria-label="Закрыть уведомление"
           >
             <X className="w-4 h-4" />
@@ -181,13 +193,12 @@ export default function AdminDashboardPage() {
             <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
               <Smartphone className="w-4 h-4 text-white" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 pr-5">
               <p className="text-sm font-semibold text-white mb-1">Новая запись</p>
               <div className="space-y-0.5 text-xs text-white/70">
                 <p>Клиент: {notification.clientName}</p>
                 <p>Телефон: {notification.phone}</p>
                 <p>Услуга: {notification.service}</p>
-                <p>Сотрудник: {STAFF.find(s => s.id === notification.staffId)?.name ?? notification.staffId}</p>
                 {notification.date && notification.time && (
                   <p>Время: {formatNotifDate(notification.date)} в {notification.time}</p>
                 )}
@@ -196,7 +207,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <button
-            onClick={() => goToBooking(notification)}
+            onClick={() => confirmAndGo(notification)}
             className="w-full py-2 bg-yellow-400 hover:bg-yellow-300 text-[#1e1f2d]
                        text-sm font-bold rounded-xl transition-colors"
           >
