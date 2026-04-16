@@ -14,7 +14,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
     'bg-[#1e1f2d] hover:bg-[#2a2b3d] text-white hover:shadow-lg ' +
-    'active:scale-95 transition-all duration-150',
+    'active:scale-95 transition-all duration-150 ' +
+    'disabled:!bg-slate-200 disabled:!text-slate-400 disabled:shadow-none',
   secondary:
     'bg-transparent border-2 border-brand text-brand-dark hover:bg-brand-lighter ' +
     'transition-colors duration-150',
@@ -48,7 +49,7 @@ export default function Button({
         'inline-flex items-center justify-center gap-2 rounded-full font-heading font-semibold',
         'transition-transform duration-150 hover:scale-[1.02] active:scale-[0.97]',
         'focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2',
-        'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
+        'disabled:cursor-not-allowed disabled:hover:scale-100',
         variantClasses[variant],
         variant !== 'link' && sizeClasses[size],
         fullWidth && 'w-full',

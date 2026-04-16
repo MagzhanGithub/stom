@@ -218,7 +218,7 @@ export default function BookingModal() {
                     <button
                       key={s.id}
                       ref={s.id === form.serviceId || (!form.serviceId && services[0]?.id === s.id) ? firstFocusRef : undefined}
-                      onClick={() => { update('serviceId', s.id); setStep(2) }}
+                      onClick={() => { update('serviceId', s.id); update('date', today); setStep(2) }}
                       className={cn(
                         'flex items-center justify-between px-4 py-3 rounded-xl border text-left',
                         'transition-all duration-150 hover:border-brand hover:bg-brand-lighter',
@@ -312,7 +312,7 @@ export default function BookingModal() {
                             'w-8 h-8 mx-auto rounded-full text-[13px] font-medium transition-colors',
                             disabled && 'text-text-muted/40 cursor-not-allowed',
                             !disabled && !selected && 'hover:bg-surface-2 text-text-primary',
-                            selected && 'bg-navy text-white font-bold',
+                            selected && 'bg-[#1e1f2d] text-white font-bold',
                           )}
                         >
                           {cell.day}
@@ -321,35 +321,33 @@ export default function BookingModal() {
                     })}
                   </div>
 
-                  {/* Time groups */}
-                  {form.date && (
-                    <div className="space-y-3 pt-3 border-t border-border">
-                      {TIME_GROUPS.map(group => (
-                        <div key={group.label}>
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-semibold text-text-primary">{group.label}</p>
-                            <ChevronUp className="w-4 h-4 text-text-muted" />
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            {group.times.map(t => (
-                              <button
-                                key={t}
-                                onClick={() => update('time', t)}
-                                className={cn(
-                                  'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
-                                  form.time === t
-                                    ? 'bg-brand border-brand text-navy'
-                                    : 'border-border hover:border-brand hover:bg-brand-lighter text-text-secondary',
-                                )}
-                              >
-                                {t}
-                              </button>
-                            ))}
-                          </div>
+                  {/* Time groups — always visible */}
+                  <div className="space-y-3 pt-3 border-t border-border">
+                    {TIME_GROUPS.map(group => (
+                      <div key={group.label}>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold text-text-primary">{group.label}</p>
+                          <ChevronUp className="w-4 h-4 text-text-muted" />
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        <div className="grid grid-cols-3 gap-2">
+                          {group.times.map(t => (
+                            <button
+                              key={t}
+                              onClick={() => update('time', t)}
+                              className={cn(
+                                'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
+                                form.time === t
+                                  ? 'bg-[#1e1f2d] border-[#1e1f2d] text-white'
+                                  : 'border-border hover:border-[#1e1f2d] hover:bg-slate-50 text-text-secondary',
+                              )}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )
             })()}
