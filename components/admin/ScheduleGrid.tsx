@@ -166,7 +166,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
 
         {/* Right time column — sticky right, hidden on mobile */}
         <div
-          className="hidden md:block w-16 flex-shrink-0 bg-white"
+          className="hidden md:block w-16 flex-shrink-0 bg-white border-l border-slate-200"
           style={{ position: 'sticky', right: 0, zIndex: 10 }}
         >
           {Array.from({ length: TOTAL_SLOTS + 1 }).map((_, i) => (

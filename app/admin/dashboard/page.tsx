@@ -184,9 +184,12 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* New booking notification popup */}
+      {/* New booking notification popup — shifts right of sidebar on desktop */}
       {notification && (
-        <div className="group fixed bottom-6 left-4 z-50 w-72 bg-[#1e1f2d] rounded-2xl p-4 shadow-2xl">
+        <div
+          className="group fixed bottom-6 z-50 w-72 bg-[#1e1f2d] rounded-2xl p-4 shadow-2xl transition-all duration-300"
+          style={{ left: !isMobile && sidebarOpen ? '228px' : '16px' }}
+        >
           {/* X: on desktop shows on hover; on mobile always visible */}
           <button
             onClick={dismissNotification}

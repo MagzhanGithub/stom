@@ -168,9 +168,12 @@ export default function BookingModal() {
     setStep(4)
   }
 
-  // Minimal dates for date picker (today + 30 days)
+  // Minimal dates for date picker (today + 90 days)
   const today = new Date().toISOString().split('T')[0]!
-  const maxDate = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]!
+  const maxDate = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0]!
+  const maxCalDate = new Date(Date.now() + 90 * 86400000)
+  const maxCalYear  = maxCalDate.getFullYear()
+  const maxCalMonth = maxCalDate.getMonth()
 
   if (!isOpen) return null
 
@@ -293,7 +296,8 @@ export default function BookingModal() {
                           const y = v.month === 11 ? v.year + 1 : v.year
                           return { year: y, month: m }
                         })}
-                        className="p-1.5 rounded-lg hover:bg-surface-2 text-text-muted"
+                        disabled={calView.year > maxCalYear || (calView.year === maxCalYear && calView.month >= maxCalMonth)}
+                        className="p-1.5 rounded-lg hover:bg-surface-2 text-text-muted disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </button>
