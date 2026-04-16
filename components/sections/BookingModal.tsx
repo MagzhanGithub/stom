@@ -159,7 +159,7 @@ export default function BookingModal() {
           serviceId:  form.serviceId,
           date:       form.date,
           time:       form.time,
-          staffId:    'anar',
+          staffId:    'zhanar',
         }),
       })
     } catch { /* non-blocking */ }

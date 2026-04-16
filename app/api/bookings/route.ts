@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     serviceId:  body.serviceId  ?? '',
     date:       body.date       ?? '',
     time:       body.time       ?? '',
-    staffId:    body.staffId    ?? 'anar',
+    staffId:    'zhanar',
     createdAt:  Date.now(),
     status:     'new',
   }
@@ -53,13 +53,12 @@ export async function POST(req: Request) {
 
   const { error } = await getSupabase().from('bookings').insert([entry])
   if (error) {
-    memBookings.push(entry)  // деградируем до памяти если Supabase недоступен
+    memBookings.push(entry)
     return Response.json(entry, { status: 201 })
   }
   return Response.json(entry, { status: 201 })
 }
 
-// Update booking status: 'dismissed' (X clicked) or 'confirmed' (admin confirmed)
 export async function PATCH(req: Request) {
   const { id, status } = await req.json() as { id: string; status: BookingEntry['status'] }
 

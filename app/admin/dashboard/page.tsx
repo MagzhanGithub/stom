@@ -9,7 +9,7 @@ import ScheduleGrid, { type Appointment, type StaffMember } from '@/components/a
 import type { BookingEntry } from '@/app/api/bookings/route'
 
 const STAFF: StaffMember[] = [
-  { id: 'anar', name: 'Анар', role: 'помощник' },
+  { id: 'zhanar', name: 'Жанар', role: 'врач' },
 ]
 
 const ADMIN_LOGIN = 'magzhan'
