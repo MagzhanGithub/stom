@@ -1,12 +1,46 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { X, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { X, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { services } from '@/lib/services'
 import Button from '@/components/ui/Button'
 import { clinic } from '@/lib/config'
+
+// ── Calendar helpers ────────────────────────────────────────────────────────
+const MONTHS_CAL = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
+const WEEKDAYS_CAL = ['пн','вт','ср','чт','пт','сб','вс']
+
+function getCalendarDays(year: number, month: number) {
+  const firstDay = new Date(year, month, 1)
+  const startOffset = (firstDay.getDay() + 6) % 7
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const daysInPrev  = new Date(year, month, 0).getDate()
+  const cells: { day: number; current: boolean }[] = []
+  for (let i = startOffset - 1; i >= 0; i--) cells.push({ day: daysInPrev - i, current: false })
+  for (let d = 1; d <= daysInMonth; d++)        cells.push({ day: d, current: true })
+  const remaining = (Math.ceil(cells.length / 7) * 7) - cells.length
+  for (let d = 1; d <= remaining; d++)           cells.push({ day: d, current: false })
+  return cells
+}
+
+function isWeekend(year: number, month: number, day: number) {
+  const dow = new Date(year, month, day).getDay()
+  return dow === 0 || dow === 6
+}
+
+// ── Time slots ───────────────────────────────────────────────────────────────
+const TIME_GROUPS = [
+  {
+    label: 'Утро',
+    times: ['09:00','09:30','10:00','10:30','11:00','11:30'],
+  },
+  {
+    label: 'День',
+    times: ['12:00','12:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'],
+  },
+]
 
 type Step = 1 | 2 | 3 | 4
 
@@ -26,12 +60,6 @@ function formatDate(iso: string): string {
   return `${d}.${m}.${y}`
 }
 
-const timeSlots = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '12:00', '13:00', '14:00', '14:30', '15:00', '15:30',
-  '16:00', '16:30', '17:00', '17:30', '18:00', '19:00',
-]
-
 export default function BookingModal() {
   const [isOpen, setIsOpen]   = useState(false)
   const [step, setStep]       = useState<Step>(1)
@@ -41,6 +69,8 @@ export default function BookingModal() {
   })
   const [errors, setErrors]   = useState<Partial<Record<keyof FormData, string>>>({})
   const firstFocusRef         = useRef<HTMLButtonElement>(null)
+  const todayDate             = new Date()
+  const [calView, setCalView] = useState({ year: todayDate.getFullYear(), month: todayDate.getMonth() })
 
   // Listen for global open event
   useEffect(() => {
@@ -206,48 +236,123 @@ export default function BookingModal() {
             )}
 
             {/* Step 2 — Date & Time */}
-            {step === 2 && (
-              <div className="space-y-5">
-                <div>
-                  <label htmlFor="booking-date" className="text-label font-medium text-text-primary block mb-1.5">
-                    Выберите дату
-                  </label>
-                  <input
-                    id="booking-date"
-                    type="date"
-                    min={today}
-                    max={maxDate}
-                    value={form.date}
-                    onChange={e => update('date', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-border text-body
-                               focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20
-                               transition-colors duration-150"
-                  />
-                </div>
-
-                {form.date && (
-                  <div>
-                    <p className="text-label font-medium text-text-primary mb-3">Выберите время</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {timeSlots.map(t => (
-                        <button
-                          key={t}
-                          onClick={() => update('time', t)}
-                          className={cn(
-                            'py-2.5 rounded-xl text-body-sm font-heading font-medium border transition-all duration-150',
-                            form.time === t
-                              ? 'bg-brand border-brand text-navy'
-                              : 'border-border hover:border-brand hover:bg-brand-lighter text-text-secondary',
-                          )}
-                        >
-                          {t}
-                        </button>
-                      ))}
+            {step === 2 && (() => {
+              const calCells = getCalendarDays(calView.year, calView.month)
+              return (
+                <div className="space-y-3">
+                  {/* Month header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-semibold text-navy">
+                        {MONTHS_CAL[calView.month]}
+                      </span>
+                      <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        onClick={() => setCalView(v => {
+                          const m = v.month === 0 ? 11 : v.month - 1
+                          const y = v.month === 0 ? v.year - 1 : v.year
+                          return { year: y, month: m }
+                        })}
+                        className="p-1.5 rounded-lg hover:bg-surface-2 text-text-muted"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setCalView(v => {
+                          const m = v.month === 11 ? 0 : v.month + 1
+                          const y = v.month === 11 ? v.year + 1 : v.year
+                          return { year: y, month: m }
+                        })}
+                        className="p-1.5 rounded-lg hover:bg-surface-2 text-text-muted"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+
+                  {/* Weekday headers */}
+                  <div className="grid grid-cols-7 text-center">
+                    {WEEKDAYS_CAL.map((d, i) => (
+                      <div
+                        key={d}
+                        className={cn(
+                          'text-[11px] font-medium py-1',
+                          i >= 5 ? 'text-red-400' : 'text-text-muted',
+                        )}
+                      >
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Days grid */}
+                  <div className="grid grid-cols-7 text-center gap-y-1">
+                    {calCells.map((cell, i) => {
+                      if (!cell.current) {
+                        return (
+                          <div key={i} className="w-8 h-8 mx-auto flex items-center justify-center text-[13px] text-text-muted/30">
+                            {cell.day}
+                          </div>
+                        )
+                      }
+                      const mm = String(calView.month + 1).padStart(2, '0')
+                      const dd = String(cell.day).padStart(2, '0')
+                      const dateStr = `${calView.year}-${mm}-${dd}`
+                      const weekend  = isWeekend(calView.year, calView.month, cell.day)
+                      const disabled = dateStr < today || dateStr > maxDate || weekend
+                      const selected = form.date === dateStr
+                      return (
+                        <button
+                          key={i}
+                          disabled={disabled}
+                          onClick={() => { update('date', dateStr); update('time', '') }}
+                          className={cn(
+                            'w-8 h-8 mx-auto rounded-full text-[13px] font-medium transition-colors',
+                            disabled && 'text-text-muted/40 cursor-not-allowed',
+                            !disabled && !selected && 'hover:bg-surface-2 text-text-primary',
+                            selected && 'bg-navy text-white font-bold',
+                          )}
+                        >
+                          {cell.day}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Time groups */}
+                  {form.date && (
+                    <div className="space-y-3 pt-3 border-t border-border">
+                      {TIME_GROUPS.map(group => (
+                        <div key={group.label}>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-sm font-semibold text-text-primary">{group.label}</p>
+                            <ChevronUp className="w-4 h-4 text-text-muted" />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {group.times.map(t => (
+                              <button
+                                key={t}
+                                onClick={() => update('time', t)}
+                                className={cn(
+                                  'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
+                                  form.time === t
+                                    ? 'bg-brand border-brand text-navy'
+                                    : 'border-border hover:border-brand hover:bg-brand-lighter text-text-secondary',
+                                )}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Step 3 — Personal data */}
             {step === 3 && (
