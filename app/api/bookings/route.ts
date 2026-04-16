@@ -15,7 +15,10 @@ export interface BookingEntry {
 
 // Fallback in-memory store — used only when Supabase is not configured
 const memBookings: BookingEntry[] = []
-const useSupabase = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const useSupabase = !!(
+  (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+  (process.env.SUPABASE_SECRET_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+)
 
 export async function GET() {
   if (!useSupabase) return Response.json(memBookings)
