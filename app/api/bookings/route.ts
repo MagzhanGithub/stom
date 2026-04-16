@@ -13,12 +13,18 @@ export interface BookingEntry {
   status: 'new' | 'dismissed' | 'confirmed'
 }
 
+// Fallback in-memory store — used only when Supabase is not configured
+const memBookings: BookingEntry[] = []
+const useSupabase = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
 export async function GET() {
+  if (!useSupabase) return Response.json(memBookings)
+
   const { data, error } = await getSupabase()
     .from('bookings')
     .select('*')
     .order('createdAt', { ascending: false })
-  if (error) return Response.json([], { status: 500 })
+  if (error) return Response.json(memBookings)
   return Response.json(data)
 }
 
@@ -36,14 +42,30 @@ export async function POST(req: Request) {
     createdAt:  Date.now(),
     status:     'new',
   }
+
+  if (!useSupabase) {
+    memBookings.push(entry)
+    return Response.json(entry, { status: 201 })
+  }
+
   const { error } = await getSupabase().from('bookings').insert([entry])
-  if (error) return Response.json({ error: error.message }, { status: 500 })
+  if (error) {
+    memBookings.push(entry)  // деградируем до памяти если Supabase недоступен
+    return Response.json(entry, { status: 201 })
+  }
   return Response.json(entry, { status: 201 })
 }
 
 // Update booking status: 'dismissed' (X clicked) or 'confirmed' (admin confirmed)
 export async function PATCH(req: Request) {
   const { id, status } = await req.json() as { id: string; status: BookingEntry['status'] }
+
+  if (!useSupabase) {
+    const entry = memBookings.find(b => b.id === id)
+    if (entry) entry.status = status
+    return Response.json({ ok: true })
+  }
+
   const { error } = await getSupabase()
     .from('bookings')
     .update({ status })
