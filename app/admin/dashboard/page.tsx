@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Users } from 'lucide-react'
+import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Search, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Sidebar from '@/components/admin/Sidebar'
 import DashboardHeader from '@/components/admin/DashboardHeader'
@@ -187,10 +187,11 @@ export default function AdminDashboardPage() {
       {/* Mobile admin bottom bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 flex">
         {([
-          { icon: TrendingUp, label: 'Выручка' },
-          { icon: ShoppingBag, label: 'Продажа' },
-          { icon: Filter,      label: 'Фильтры' },
-          { icon: Users,       label: 'Найти клиента' },
+          { icon: TrendingUp, label: 'Выручка'           },
+          { icon: ShoppingBag, label: 'Продажа'          },
+          { icon: Filter,      label: 'Фильтры'          },
+          { icon: Search,      label: 'Найти клиента'    },
+          { icon: UserPlus,    label: 'Доб. сотрудника'  },
         ] as const).map(({ icon: Icon, label }) => (
           <button
             key={label}
