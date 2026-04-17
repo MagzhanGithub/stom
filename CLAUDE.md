@@ -121,13 +121,31 @@ Single-admin JWT auth via `jose`. Credentials stored in env vars `ADMIN_LOGIN` /
 - `Sidebar.tsx` — dark sidebar (`bg-[#1e1f2d]`): mini calendar, quick actions grid, Избранное, user+logout. Bell icon shows red dot when there are unconfirmed bookings; clicking it opens the notification popup. On mobile: hidden by default, opens as fixed overlay with backdrop.
 - `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days. Syncs with header date nav via `useEffect` on `selectedDate` prop.
 - `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. Shows red dot on toggle button when sidebar is closed and there are unread notifications. On mobile: abbreviated date ("16 апр"), Продать/filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
-- `ScheduleGrid.tsx` — time grid 09:00–18:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time shown as a pill only (no horizontal line). Left and right time columns use `position: sticky`. Right time column hidden on mobile (`hidden md:block`). Single staff column (no per-staff filtering — single-doctor clinic).
+- `ScheduleGrid.tsx` — time grid 09:00–19:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time: pill in left time column + black `h-px` line across staff columns. Left and right time columns use `position: sticky`. Right time column hidden on mobile (`hidden md:block`). Staff columns are dynamic (from `/api/staff`); when no staff exist, a single empty placeholder column renders via `displayStaff` fallback. Header and grid share a single `overflow-auto` scroll container; header uses `sticky top-0` so it stays visible on vertical scroll while scrolling horizontally with the grid.
+- `AddStaffModal.tsx` — bottom-sheet modal, inputs: Имя + Должность, `POST /api/staff`, calls `onAdded()` on success.
+- `SearchClientModal.tsx` — bottom-sheet modal, filters `bookings` prop by clientName/phone in-memory (no API call).
 
 **Mobile sidebar toggle:** `isMobile` state (from `useEffect` + resize listener) controls whether sidebar is a flex item (desktop) or a fixed overlay (mobile).
 
-### Booking API and notification system
+**Mobile admin bottom bar** (fixed, `md:hidden`, `z-40`): 5 buttons — Выручка, Продажа, Фильтры, Найти клиента (opens `SearchClientModal`), Добавить (opens `AddStaffModal`).
+
+### Booking and Staff APIs
 
 `app/api/bookings/route.ts` — persists to **Supabase PostgreSQL** (`bookings` table). Falls back to an in-memory array only when `SUPABASE_SECRET_KEY` / `NEXT_PUBLIC_SUPABASE_URL` env vars are missing (local dev without credentials).
+
+`app/api/staff/route.ts` — persists to **Supabase PostgreSQL** (`staff` table). In-memory fallback when Supabase absent. `GET` returns Supabase data (empty array if table empty — no hardcoded defaults). `POST` inserts a new `StaffEntry` (`id`, `name`, `role`, `createdAt`).
+
+**Required Supabase tables:**
+```sql
+-- bookings table (see plan file for full schema)
+-- staff table:
+create table staff (
+  id text primary key,
+  name text not null,
+  role text not null,
+  "createdAt" bigint not null
+);
+```
 
 **Required env vars** (Vercel + `.env.local`):
 - `NEXT_PUBLIC_SUPABASE_URL` — project URL (`https://<id>.supabase.co`)
