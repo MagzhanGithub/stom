@@ -140,7 +140,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
           </div>
 
           {/* Staff columns */}
-          {staff.map(member => {
+          {displayStaff.map(member => {
             const memberAppts = appointments
             return (
               <div
