@@ -71,7 +71,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
   const currentTopPx = (currentMin / SLOT_MIN) * SLOT_H
 
   return (
-    <div className="h-full overflow-auto pb-20 md:pb-4">
+    <div className="h-full overflow-auto pb-36 md:pb-4">
       <div className="w-full md:min-w-max">
 
       {/* Staff header — scrolls together with grid */}

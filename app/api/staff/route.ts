@@ -23,7 +23,10 @@ export async function GET() {
     .select('*')
     .order('createdAt', { ascending: true })
   if (error) return Response.json(memStaff, { status: 500 })
-  return Response.json(data?.length ? data : memStaff)
+  // Always prepend defaults that aren't already in Supabase (by id)
+  const supabaseIds = new Set((data ?? []).map((s: StaffEntry) => s.id))
+  const defaults = memStaff.filter(s => !supabaseIds.has(s.id))
+  return Response.json([...defaults, ...(data ?? [])])
 }
 
 export async function POST(req: Request) {
