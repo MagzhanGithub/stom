@@ -27,7 +27,7 @@ interface Props {
 }
 
 const START_HOUR  = 9
-const END_HOUR    = 18
+const END_HOUR    = 19
 const SLOT_MIN    = 30
 const SLOT_H      = 32
 
@@ -71,12 +71,16 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
   const currentTopPx = (currentMin / SLOT_MIN) * SLOT_H
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full overflow-auto pb-20 md:pb-4">
+      <div className="w-full md:min-w-max">
 
-      {/* Staff header — above the scrollable grid */}
-      <div className="flex-shrink-0 bg-white border-b border-slate-200 flex">
+      {/* Staff header — scrolls together with grid */}
+      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 flex">
         {/* Single person icon in the time column area */}
-        <div className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center">
+        <div
+          className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white"
+          style={{ position: 'sticky', left: 0 }}
+        >
           <User className="w-4 h-4 text-slate-300" />
         </div>
 
@@ -94,8 +98,8 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
         <div className="hidden md:block w-16 flex-shrink-0" />
       </div>
 
-      {/* Scrollable grid — pb-16 on mobile so 18:00 isn't hidden behind bottom bar */}
-      <div className="flex-1 overflow-auto pb-16 md:pb-0">
+      {/* Grid */}
+      <div>
         <div className="flex w-full md:min-w-max pt-4" style={{ height: gridHeight + 16 }}>
 
           {/* Left time column — sticky left */}
@@ -218,6 +222,8 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
           </div>
 
         </div>
+      </div>
+
       </div>
     </div>
   )
