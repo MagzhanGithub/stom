@@ -29,8 +29,7 @@ export default function SearchClientModal({ bookings, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       <div className="fixed inset-0 bg-black/40" onClick={onClose} />
       <div
-        className="relative w-full md:w-[480px] bg-white rounded-t-2xl md:rounded-2xl shadow-2xl flex flex-col"
-        style={{ maxHeight: '85vh' }}
+        className="relative w-full md:w-[480px] bg-white rounded-t-2xl md:rounded-2xl shadow-2xl flex flex-col max-h-[70vh] md:max-h-[85vh]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 flex-shrink-0">

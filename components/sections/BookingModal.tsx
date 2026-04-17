@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { X, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react'
+import { X, ChevronRight, ChevronLeft, CheckCircle2, User } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { services } from '@/lib/services'
@@ -26,32 +26,26 @@ function getCalendarDays(year: number, month: number) {
 }
 
 function isWeekend(year: number, month: number, day: number) {
-  // Only Sunday is closed; Saturday works 09:00–13:00
   return new Date(year, month, day).getDay() === 0
 }
 
 // ── Time slots ───────────────────────────────────────────────────────────────
 const TIME_GROUPS = [
-  {
-    label: 'Утро',
-    times: ['09:00','09:30','10:00','10:30','11:00','11:30'],
-  },
-  {
-    label: 'День',
-    times: ['12:00','12:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'],
-  },
+  { label: 'Утро',  times: ['09:00','09:30','10:00','10:30','11:00','11:30'] },
+  { label: 'День',  times: ['12:00','12:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'] },
 ]
 
-type Step = 1 | 2 | 3 | 4
+interface StaffItem { id: string; name: string; role: string }
 
 interface FormData {
+  staffId:   string
   serviceId: string
-  date: string
-  time: string
-  name: string
-  phone: string
-  comment: string
-  consent: boolean
+  date:      string
+  time:      string
+  name:      string
+  phone:     string
+  comment:   string
+  consent:   boolean
 }
 
 function formatDate(iso: string): string {
@@ -61,17 +55,26 @@ function formatDate(iso: string): string {
 }
 
 export default function BookingModal() {
-  const [isOpen, setIsOpen]   = useState(false)
-  const [step, setStep]       = useState<Step>(1)
+  const [isOpen,    setIsOpen]    = useState(false)
+  const [step,      setStep]      = useState(1)
   const [isLoading, setIsLoading] = useState(false)
-  const [form, setForm]       = useState<FormData>({
-    serviceId: '', date: '', time: '', name: '', phone: '', comment: '', consent: false,
+  const [staffList, setStaffList] = useState<StaffItem[]>([])
+  const [staffLoaded, setStaffLoaded] = useState(false)
+  const [form, setForm] = useState<FormData>({
+    staffId: '', serviceId: '', date: '', time: '', name: '', phone: '', comment: '', consent: false,
   })
-  const [errors, setErrors]   = useState<Partial<Record<keyof FormData, string>>>({})
+  const [errors,      setErrors]      = useState<Partial<Record<keyof FormData, string>>>({})
   const [bookedTimes, setBookedTimes] = useState<string[]>([])
-  const firstFocusRef         = useRef<HTMLButtonElement>(null)
-  const todayDate             = new Date()
+  const firstFocusRef = useRef<HTMLButtonElement>(null)
+  const todayDate     = new Date()
   const [calView, setCalView] = useState({ year: todayDate.getFullYear(), month: todayDate.getMonth() })
+
+  // Derived step config
+  const isMultiStaff  = staffList.length >= 2
+  const totalFormSteps = isMultiStaff ? 4 : 3
+  const successStep    = totalFormSteps + 1   // 4 (single) or 5 (multi)
+  // step offsets: multi → service=2, date=3, personal=4 | single → service=1, date=2, personal=3
+  const S = isMultiStaff ? 1 : 0  // shift
 
   // Listen for global open event
   useEffect(() => {
@@ -80,23 +83,37 @@ export default function BookingModal() {
     return () => window.removeEventListener('open-booking-modal', handler)
   }, [])
 
-  // Focus first element when opens
+  // Fetch staff list when modal opens
+  useEffect(() => {
+    if (!isOpen) return
+    setStaffLoaded(false)
+    fetch('/api/staff')
+      .then(r => r.json())
+      .then((data: StaffItem[]) => { setStaffList(data); setStaffLoaded(true) })
+      .catch(() => { setStaffList([]); setStaffLoaded(true) })
+  }, [isOpen])
+
+  // Focus first element
   useEffect(() => {
     if (isOpen) setTimeout(() => firstFocusRef.current?.focus(), 50)
   }, [isOpen])
 
-  // Fetch confirmed bookings for the selected date → disable those slots
+  // Fetch confirmed bookings for the selected date (per staff if multi)
   useEffect(() => {
     if (!form.date) return
     fetch('/api/bookings')
       .then(r => r.json())
-      .then((data: { date: string; time: string; status: string }[]) => {
+      .then((data: { date: string; time: string; status: string; staffId: string }[]) => {
         setBookedTimes(
-          data.filter(b => b.date === form.date && b.status === 'confirmed').map(b => b.time)
+          data.filter(b =>
+            b.date === form.date &&
+            b.status === 'confirmed' &&
+            (!isMultiStaff || b.staffId === form.staffId)
+          ).map(b => b.time)
         )
       })
       .catch(() => {})
-  }, [form.date])
+  }, [form.date, form.staffId, isMultiStaff])
 
   // Lock body scroll
   useEffect(() => {
@@ -124,30 +141,27 @@ export default function BookingModal() {
     if (!validateStep3()) return
     setIsLoading(true)
 
-    // Build WhatsApp message with booking details
     const service = services.find(s => s.id === form.serviceId)
+    const resolvedStaffId = staffList.length === 1 ? staffList[0]!.id : form.staffId
+    const staffName = staffList.find(s => s.id === resolvedStaffId)?.name ?? ''
+
     const lines = [
       `📋 *Новая запись — ${clinic.name}*`,
       ``,
       `👤 Имя: ${form.name}`,
       `📞 Телефон: ${form.phone}`,
       `🦷 Услуга: ${service?.title ?? '—'}`,
+      staffName ? `👨‍⚕️ Врач: ${staffName}` : '',
       form.date ? `📅 Дата: ${formatDate(form.date)}` : '',
       form.time ? `🕐 Время: ${form.time}` : '',
       form.comment ? `💬 ${form.comment}` : '',
     ].filter(Boolean).join('\n')
 
     const waUrl = `https://wa.me/${clinic.phone.replace('+', '')}?text=${encodeURIComponent(lines)}`
-    // Use anchor click — more reliable than window.open on mobile (avoids popup blocker)
     const a = document.createElement('a')
-    a.href = waUrl
-    a.target = '_blank'
-    a.rel = 'noopener noreferrer'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    a.href = waUrl; a.target = '_blank'; a.rel = 'noopener noreferrer'
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
 
-    // Save booking to admin dashboard
     try {
       await fetch('/api/bookings', {
         method: 'POST',
@@ -159,23 +173,27 @@ export default function BookingModal() {
           serviceId:  form.serviceId,
           date:       form.date,
           time:       form.time,
-          staffId:    'zhanar',
+          staffId:    resolvedStaffId,
         }),
       })
     } catch { /* non-blocking */ }
 
     setIsLoading(false)
-    setStep(4)
+    setStep(successStep)
   }
 
-  // Minimal dates for date picker (today + 90 days)
-  const today = new Date().toISOString().split('T')[0]!
-  const maxDate = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0]!
-  const maxCalDate = new Date(Date.now() + 90 * 86400000)
+  const today    = new Date().toISOString().split('T')[0]!
+  const maxDate  = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0]!
+  const maxCalDate  = new Date(Date.now() + 90 * 86400000)
   const maxCalYear  = maxCalDate.getFullYear()
   const maxCalMonth = maxCalDate.getMonth()
 
   if (!isOpen) return null
+
+  const isSuccess  = step === successStep
+  const stepLabel  = !isSuccess && staffLoaded && staffList.length > 0
+    ? `Шаг ${step} из ${totalFormSteps}`
+    : undefined
 
   return (
     <AnimatePresence>
@@ -208,10 +226,10 @@ export default function BookingModal() {
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div>
               <h2 id="booking-modal-title" className="text-h3 font-heading text-navy">
-                {step === 4 ? 'Вы записаны!' : 'Запись на приём'}
+                {isSuccess ? 'Вы записаны!' : 'Запись на приём'}
               </h2>
-              {step !== 4 && (
-                <p className="text-caption text-text-muted mt-0.5">Шаг {step} из 3</p>
+              {stepLabel && (
+                <p className="text-caption text-text-muted mt-0.5">{stepLabel}</p>
               )}
             </div>
             <button
@@ -225,15 +243,15 @@ export default function BookingModal() {
           </div>
 
           {/* Progress bar */}
-          {step !== 4 && (
+          {!isSuccess && staffLoaded && staffList.length > 0 && (
             <div className="h-1 bg-surface-2">
               <div
                 className="h-full bg-brand transition-all duration-300"
-                style={{ width: `${(step / 3) * 100}%` }}
+                style={{ width: `${(step / totalFormSteps) * 100}%` }}
                 role="progressbar"
                 aria-valuenow={step}
                 aria-valuemin={1}
-                aria-valuemax={3}
+                aria-valuemax={totalFormSteps}
               />
             </div>
           )}
@@ -241,8 +259,65 @@ export default function BookingModal() {
           {/* Body */}
           <div className="p-6 overflow-y-auto max-h-[70vh]">
 
-            {/* Step 1 — Service */}
-            {step === 1 && (
+            {/* Loading staff */}
+            {!staffLoaded && (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+
+            {/* No staff — booking blocked */}
+            {staffLoaded && staffList.length === 0 && (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-5">
+                  <User className="w-10 h-10 text-slate-400" aria-hidden="true" />
+                </div>
+                <h3 className="text-h3 font-heading text-navy mb-3">Запись недоступна</h3>
+                <p className="text-body text-text-secondary mb-6">
+                  У нас сейчас нет стоматолога. Пожалуйста, позвоните нам напрямую.
+                </p>
+                <Button variant="secondary" fullWidth onClick={close}>
+                  Закрыть
+                </Button>
+              </div>
+            )}
+
+            {/* Step: choose staff (multi-staff only, step 1) */}
+            {staffLoaded && isMultiStaff && step === 1 && (
+              <div>
+                <p className="text-body font-heading font-semibold text-navy mb-4">
+                  Выберите стоматолога
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  {staffList.map(s => (
+                    <button
+                      key={s.id}
+                      ref={s.id === staffList[0]?.id ? firstFocusRef : undefined}
+                      onClick={() => { update('staffId', s.id); setStep(2) }}
+                      className={cn(
+                        'flex items-center gap-3 px-4 py-3 rounded-xl border text-left',
+                        'transition-all duration-150 hover:border-brand hover:bg-brand-lighter',
+                        form.staffId === s.id
+                          ? 'border-brand bg-brand-lighter'
+                          : 'border-border bg-white',
+                      )}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 text-slate-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-body text-text-primary font-medium">{s.name}</p>
+                        <p className="text-caption text-text-muted">{s.role}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-text-muted flex-shrink-0 ml-auto" aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step: choose service */}
+            {staffLoaded && staffList.length > 0 && step === 1 + S && (
               <div>
                 <p className="text-body font-heading font-semibold text-navy mb-4">
                   Выберите услугу
@@ -251,8 +326,8 @@ export default function BookingModal() {
                   {services.map(s => (
                     <button
                       key={s.id}
-                      ref={s.id === form.serviceId || (!form.serviceId && services[0]?.id === s.id) ? firstFocusRef : undefined}
-                      onClick={() => { update('serviceId', s.id); update('date', today); setStep(2) }}
+                      ref={!isMultiStaff && (s.id === form.serviceId || (!form.serviceId && services[0]?.id === s.id)) ? firstFocusRef : undefined}
+                      onClick={() => { update('serviceId', s.id); update('date', today); setStep(2 + S) }}
                       className={cn(
                         'flex items-center justify-between px-4 py-3 rounded-xl border text-left',
                         'transition-all duration-150 hover:border-brand hover:bg-brand-lighter',
@@ -269,12 +344,11 @@ export default function BookingModal() {
               </div>
             )}
 
-            {/* Step 2 — Date & Time */}
-            {step === 2 && (() => {
+            {/* Step: choose date & time */}
+            {staffLoaded && staffList.length > 0 && step === 2 + S && (() => {
               const calCells = getCalendarDays(calView.year, calView.month)
               return (
                 <div className="space-y-3">
-                  {/* Month header */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-navy">
                       {MONTHS_CAL[calView.month]}
@@ -304,22 +378,14 @@ export default function BookingModal() {
                     </div>
                   </div>
 
-                  {/* Weekday headers */}
                   <div className="grid grid-cols-7 text-center">
                     {WEEKDAYS_CAL.map((d, i) => (
-                      <div
-                        key={d}
-                        className={cn(
-                          'text-[11px] font-medium py-1',
-                          i >= 5 ? 'text-red-400' : 'text-text-muted',
-                        )}
-                      >
+                      <div key={d} className={cn('text-[11px] font-medium py-1', i >= 5 ? 'text-red-400' : 'text-text-muted')}>
                         {d}
                       </div>
                     ))}
                   </div>
 
-                  {/* Days grid */}
                   <div className="grid grid-cols-7 text-center gap-y-1">
                     {calCells.map((cell, i) => {
                       if (!cell.current) {
@@ -331,7 +397,7 @@ export default function BookingModal() {
                       }
                       const mm = String(calView.month + 1).padStart(2, '0')
                       const dd = String(cell.day).padStart(2, '0')
-                      const dateStr = `${calView.year}-${mm}-${dd}`
+                      const dateStr  = `${calView.year}-${mm}-${dd}`
                       const weekend  = isWeekend(calView.year, calView.month, cell.day)
                       const disabled = dateStr < today || dateStr > maxDate || weekend
                       const selected = form.date === dateStr
@@ -353,22 +419,16 @@ export default function BookingModal() {
                     })}
                   </div>
 
-                  {/* Time groups — Saturday capped at 12:30; past times disabled */}
                   {(() => {
-                    const isSat = form.date
-                      ? new Date(form.date + 'T00:00:00').getDay() === 6
-                      : false
-                    const n = new Date()
+                    const isSat  = form.date ? new Date(form.date + 'T00:00:00').getDay() === 6 : false
+                    const n      = new Date()
                     const nowStr = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`
                     const isPast   = (t: string) => form.date === today && t <= nowStr
                     const isBooked = (t: string) => bookedTimes.includes(t)
-
                     return (
                       <div className="space-y-3 pt-3 border-t border-border">
                         {TIME_GROUPS.map(group => {
-                          const times = isSat
-                            ? group.times.filter(t => t <= '12:30')
-                            : group.times
+                          const times = isSat ? group.times.filter(t => t <= '12:30') : group.times
                           if (times.length === 0) return null
                           return (
                             <div key={group.label}>
@@ -405,8 +465,8 @@ export default function BookingModal() {
               )
             })()}
 
-            {/* Step 3 — Personal data */}
-            {step === 3 && (
+            {/* Step: personal data */}
+            {staffLoaded && staffList.length > 0 && step === 3 + S && (
               <div className="space-y-4">
                 <div>
                   <label htmlFor="booking-name" className="text-label font-medium text-text-primary block mb-1.5">
@@ -426,16 +486,11 @@ export default function BookingModal() {
                         ? 'border-state-error focus:ring-state-error/20'
                         : 'border-border focus:border-brand focus:ring-brand/20',
                     )}
-                    aria-invalid={!!errors.name}
-                    aria-describedby={errors.name ? 'name-error' : undefined}
                   />
                   {errors.name && (
-                    <p id="name-error" className="mt-1 text-body-sm text-state-error" role="alert">
-                      {errors.name}
-                    </p>
+                    <p className="mt-1 text-body-sm text-state-error" role="alert">{errors.name}</p>
                   )}
                 </div>
-
                 <div>
                   <label htmlFor="booking-phone" className="text-label font-medium text-text-primary block mb-1.5">
                     Номер телефона <span className="text-state-error" aria-hidden="true">*</span>
@@ -455,16 +510,11 @@ export default function BookingModal() {
                         ? 'border-state-error focus:ring-state-error/20'
                         : 'border-border focus:border-brand focus:ring-brand/20',
                     )}
-                    aria-invalid={!!errors.phone}
-                    aria-describedby={errors.phone ? 'phone-error' : undefined}
                   />
                   {errors.phone && (
-                    <p id="phone-error" className="mt-1 text-body-sm text-state-error" role="alert">
-                      {errors.phone}
-                    </p>
+                    <p className="mt-1 text-body-sm text-state-error" role="alert">{errors.phone}</p>
                   )}
                 </div>
-
                 <div>
                   <label htmlFor="booking-comment" className="text-label font-medium text-text-primary block mb-1.5">
                     Комментарий{' '}
@@ -482,15 +532,14 @@ export default function BookingModal() {
                                transition-colors duration-150"
                   />
                 </div>
-
                 <p className="text-caption text-text-muted">
                   Мы свяжемся только для подтверждения записи. Без предоплаты.
                 </p>
               </div>
             )}
 
-            {/* Step 4 — Success */}
-            {step === 4 && (
+            {/* Success */}
+            {isSuccess && (
               <div className="text-center py-4">
                 <div className="w-20 h-20 rounded-full bg-state-success/10 flex items-center justify-center mx-auto mb-5">
                   <CheckCircle2 className="w-10 h-10 text-state-success" aria-hidden="true" />
@@ -517,26 +566,26 @@ export default function BookingModal() {
           </div>
 
           {/* Footer actions */}
-          {step !== 4 && step !== 1 && (
+          {!isSuccess && staffList.length > 0 && step > 1 && (
             <div className="px-6 py-4 border-t border-border flex gap-3">
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setStep(prev => (prev - 1) as Step)}
+                onClick={() => setStep(prev => prev - 1)}
                 className="flex-shrink-0"
               >
                 Назад
               </Button>
-              {step === 2 && (
+              {step === 2 + S && (
                 <Button
                   fullWidth
                   disabled={!form.date || !form.time}
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(3 + S)}
                 >
                   Продолжить
                 </Button>
               )}
-              {step === 3 && (
+              {step === 3 + S && (
                 <Button
                   fullWidth
                   isLoading={isLoading}
