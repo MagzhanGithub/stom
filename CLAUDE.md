@@ -121,17 +121,23 @@ Single-admin JWT auth via `jose`. Credentials stored in env vars `ADMIN_LOGIN` /
 - `Sidebar.tsx` — dark sidebar (`bg-[#1e1f2d]`): mini calendar, quick actions grid, Избранное, user+logout. Bell icon shows red dot when there are unconfirmed bookings; clicking it opens the notification popup. On mobile: hidden by default, opens as fixed overlay with backdrop.
 - `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days. Syncs with header date nav via `useEffect` on `selectedDate` prop.
 - `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. Shows red dot on toggle button when sidebar is closed and there are unread notifications. On mobile: abbreviated date ("16 апр"), Продать/filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
-- `ScheduleGrid.tsx` — time grid 09:00–18:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time shown as a pill only (no horizontal line). Left and right time columns use `position: sticky`. Right time column hidden on mobile (`hidden md:block`). Staff columns fill viewport on mobile (`min-w-0 md:min-w-[320px]`).
+- `ScheduleGrid.tsx` — time grid 09:00–18:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time shown as a pill only (no horizontal line). Left and right time columns use `position: sticky`. Right time column hidden on mobile (`hidden md:block`). Single staff column (no per-staff filtering — single-doctor clinic).
 
 **Mobile sidebar toggle:** `isMobile` state (from `useEffect` + resize listener) controls whether sidebar is a flex item (desktop) or a fixed overlay (mobile).
 
 ### Booking API and notification system
 
-`app/api/bookings/route.ts` — in-memory store (module-level array, resets on server restart; replace with Supabase/PostgreSQL for production).
+`app/api/bookings/route.ts` — persists to **Supabase PostgreSQL** (`bookings` table). Falls back to an in-memory array only when `SUPABASE_SECRET_KEY` / `NEXT_PUBLIC_SUPABASE_URL` env vars are missing (local dev without credentials).
+
+**Required env vars** (Vercel + `.env.local`):
+- `NEXT_PUBLIC_SUPABASE_URL` — project URL (`https://<id>.supabase.co`)
+- `SUPABASE_SECRET_KEY` — secret key (bypasses RLS; server-side only)
+
+`lib/supabase.ts` — lazy singleton `getSupabase()` (avoids build-time init error when env vars are absent).
 
 **Booking status flow:** `'new'` → `'dismissed'` (X button) or `'confirmed'` (Перейти к записи button)
 
-- `GET /api/bookings` — returns all bookings
+- `GET /api/bookings` — returns all bookings; returns **500** on Supabase error (never returns empty array, which would clear the dashboard)
 - `POST /api/bookings` — creates new booking (`BookingEntry`), status starts as `'new'`
 - `PATCH /api/bookings` — updates status by `id`
 
