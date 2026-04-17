@@ -45,7 +45,14 @@ window.addEventListener('open-booking-modal', handler)
 
 ### Booking → WhatsApp + API flow
 
-`BookingModal` (4-step form) on submit:
+`BookingModal` fetches `/api/staff` on open and adapts the flow based on staff count:
+- **0 staff** → shows "Запись недоступна / нет стоматолога" message, no form
+- **1 staff** → 3-step flow (service → date/time → personal data → success); staffId assigned automatically
+- **2+ staff** → 4-step flow (choose staff → service → date/time → personal data → success)
+
+Step variables use a shift offset `S = isMultiStaff ? 1 : 0` so service=`1+S`, date=`2+S`, personal=`3+S`, success=`4+S`.
+
+On submit:
 1. Opens clinic WhatsApp via anchor click (more reliable than `window.open` on mobile):
 ```ts
 const a = document.createElement('a')
@@ -53,12 +60,12 @@ a.href = waUrl   // https://wa.me/77074289598?text=...
 a.target = '_blank'
 document.body.appendChild(a); a.click(); document.body.removeChild(a)
 ```
-2. POSTs booking data to `POST /api/bookings` (so admin dashboard receives it)
-3. `setStep(4)` — shows success screen
+2. POSTs booking data to `POST /api/bookings` with the resolved `staffId`
+3. `setStep(successStep)` — shows success screen
 
 `formatDate(iso)` in `BookingModal.tsx` converts `YYYY-MM-DD` → `DD.MM.YYYY` for display.
 
-Step 2 (date selection) uses an inline calendar (not `<input type="date">`). Sundays are disabled. Saturdays only show slots up to 12:30. Past time slots are disabled when today is selected. Already-confirmed slots are fetched and disabled to prevent double-booking.
+Date selection uses an inline calendar (not `<input type="date">`). Sundays are disabled. Saturdays only show slots up to 12:30. Past time slots are disabled when today is selected. Already-confirmed slots are fetched and disabled to prevent double-booking.
 
 ### Server vs Client components
 
@@ -170,7 +177,7 @@ create table staff (
 
 **Schedule grid** only shows `status === 'confirmed'` bookings. Unconfirmed bookings are invisible in the grid.
 
-**Double-booking prevention:** `BookingModal` fetches `/api/bookings` on date change, disables time slots where a `'confirmed'` booking already exists for that date.
+**Double-booking prevention:** `BookingModal` fetches `/api/bookings` on date change. With 1 staff, all confirmed slots for that date are disabled. With 2+ staff, only slots confirmed for the **selected staff** are disabled — other doctors remain bookable at the same time.
 
 **Booking window:** clients can book up to **90 days** ahead. Calendar next-month nav is disabled once the 90-day boundary month is reached.
 
