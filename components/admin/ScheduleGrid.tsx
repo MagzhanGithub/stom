@@ -65,6 +65,8 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
     return () => clearInterval(t)
   }, [])
 
+  const displayStaff = staff.length > 0 ? staff : [{ id: '__empty__', name: '', role: '' }]
+
   const isToday      = selectedDate ? isSameDay(selectedDate, now) : isSameDay(new Date(), now)
   const currentMin   = timeToMinutes(now.getHours(), now.getMinutes()) - BASE_MIN
   const showTimeLine = isToday && currentMin >= 0 && currentMin <= (END_HOUR - START_HOUR) * 60
@@ -84,7 +86,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
           <User className="w-4 h-4 text-slate-300" />
         </div>
 
-        {staff.map(member => (
+        {displayStaff.map(member => (
           <div
             key={member.id}
             className="flex-1 min-w-0 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-slate-200"
