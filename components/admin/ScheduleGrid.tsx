@@ -75,18 +75,17 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
 
       {/* Staff header — above the scrollable grid */}
       <div className="flex-shrink-0 bg-white border-b border-slate-200 flex">
-        {/* Spacer matching left time column */}
-        <div className="w-12 md:w-16 flex-shrink-0" />
+        {/* Single person icon in the time column area */}
+        <div className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center">
+          <User className="w-4 h-4 text-slate-300" />
+        </div>
 
         {staff.map(member => (
           <div
             key={member.id}
-            className="flex-1 min-w-0 md:min-w-[320px] flex flex-col items-center py-3 gap-0.5 border-l border-slate-200"
+            className="flex-1 min-w-0 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-slate-200"
           >
-            <div className="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center">
-              <User className="w-4 h-4 text-violet-400" />
-            </div>
-            <p className="text-xs font-semibold text-slate-700 mt-0.5">{member.name}</p>
+            <p className="text-xs font-semibold text-slate-700">{member.name}</p>
             <p className="text-[10px] text-slate-400">{member.role}</p>
           </div>
         ))}
@@ -95,9 +94,9 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
         <div className="hidden md:block w-16 flex-shrink-0" />
       </div>
 
-      {/* Scrollable grid */}
-      <div className="flex-1 overflow-auto">
-        <div className="flex w-full md:min-w-max pt-2" style={{ height: gridHeight + 8 }}>
+      {/* Scrollable grid — pb-16 on mobile so 18:00 isn't hidden behind bottom bar */}
+      <div className="flex-1 overflow-auto pb-16 md:pb-0">
+        <div className="flex w-full md:min-w-max pt-4" style={{ height: gridHeight + 16 }}>
 
           {/* Left time column — sticky left */}
           <div
