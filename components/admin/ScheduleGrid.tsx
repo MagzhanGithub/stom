@@ -43,6 +43,9 @@ const BASE_MIN    = timeToMinutes(START_HOUR, 0)
 const TOTAL_SLOTS = ((END_HOUR - START_HOUR) * 60) / SLOT_MIN
 const gridHeight  = TOTAL_SLOTS * SLOT_H
 
+// Left time column width — narrower on mobile so appointments sit closer to left edge
+const TIME_COL = 'w-12 md:w-16'
+
 function slotLabel(i: number): string {
   if (i % 2 === 0) {
     const h = START_HOUR + i / 2
@@ -72,17 +75,18 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
 
   return (
     <div className="h-full overflow-auto">
-      <div className="flex pt-8 w-full md:min-w-max" style={{ height: gridHeight + 32 }}>
+      {/* min-w-[520px] allows horizontal scroll on mobile */}
+      <div className="flex pt-8 min-w-[520px] md:min-w-max" style={{ height: gridHeight + 32 }}>
 
-        {/* Left time column — sticky left */}
+        {/* Left time column — sticky left, narrower on mobile */}
         <div
-          className="w-16 flex-shrink-0 bg-white border-r border-slate-200 relative"
+          className={cn(TIME_COL, 'flex-shrink-0 bg-white border-r border-slate-200 relative')}
           style={{ position: 'sticky', left: 0, zIndex: 10 }}
         >
-          {/* Current time pill — floats to the right over the staff column */}
+          {/* Current time pill — stays inside left column (on the left) */}
           {showTimePill && (
             <div
-              className="absolute right-0 z-20 translate-x-full pointer-events-none"
+              className="absolute right-0 z-20 pointer-events-none pr-1"
               style={{ top: currentTopPx - 9 }}
             >
               <div className="bg-[#1e1f2d] text-white text-[10px] font-bold rounded px-1.5 py-0.5 leading-none whitespace-nowrap">
@@ -95,7 +99,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
           {Array.from({ length: TOTAL_SLOTS + 1 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-start justify-end pr-3"
+              className="flex items-start justify-end pr-2"
               style={{ height: i < TOTAL_SLOTS ? SLOT_H : 0 }}
             >
               <span className={cn(
@@ -116,7 +120,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
           return (
             <div
               key={member.id}
-              className="flex-1 min-w-0 md:min-w-[320px] border-l border-r border-slate-200"
+              className="flex-1 min-w-[320px] border-l border-r border-slate-200"
               style={{ position: 'relative', height: gridHeight }}
             >
               {/* Grid lines */}
@@ -132,6 +136,14 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
                   }
                 </div>
               ))}
+
+              {/* Current time horizontal line — black, spans full column */}
+              {showTimePill && (
+                <div
+                  className="absolute left-0 right-0 h-px bg-[#1e1f2d] z-10 pointer-events-none"
+                  style={{ top: currentTopPx }}
+                />
+              )}
 
               {/* Appointment cards */}
               {memberAppts.map(appt => {
@@ -162,7 +174,6 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
             </div>
           )
         })}
-
 
         {/* Right time column — sticky right, hidden on mobile */}
         <div

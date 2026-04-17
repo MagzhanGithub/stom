@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
           { icon: ShoppingBag, label: 'Продажа'          },
           { icon: Filter,      label: 'Фильтры'          },
           { icon: Search,      label: 'Найти клиента'    },
-          { icon: UserPlus,    label: 'Доб. сотрудника'  },
+          { icon: UserPlus,    label: 'Добавить'          },
         ] as const).map(({ icon: Icon, label }) => (
           <button
             key={label}
