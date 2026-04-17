@@ -1,16 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Search, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Sidebar from '@/components/admin/Sidebar'
 import DashboardHeader from '@/components/admin/DashboardHeader'
 import ScheduleGrid, { type Appointment, type StaffMember } from '@/components/admin/ScheduleGrid'
+import SearchClientModal from '@/components/admin/SearchClientModal'
+import AddStaffModal from '@/components/admin/AddStaffModal'
 import type { BookingEntry } from '@/app/api/bookings/route'
-
-const STAFF: StaffMember[] = [
-  { id: 'zhanar', name: 'Жанар', role: 'врач' },
-]
 
 const ADMIN_LOGIN = 'magzhan'
 
@@ -47,11 +45,23 @@ export default function AdminDashboardPage() {
   const [isMobile,     setIsMobile]     = useState(false)
 
   const [bookings,     setBookings]     = useState<BookingEntry[]>([])
+  const [staff,        setStaff]        = useState<StaffMember[]>([])
   const [notification, setNotification] = useState<BookingEntry | null>(null)
-  const shownIdsRef = useRef(new Set<string>())  // IDs shown as popup this session
+  const [showSearch,   setShowSearch]   = useState(false)
+  const [showAddStaff, setShowAddStaff] = useState(false)
+  const shownIdsRef = useRef(new Set<string>())
 
-  // hasUnread: any booking that is NOT yet confirmed
   const hasUnread = bookings.some(b => b.status === 'new' || b.status === 'dismissed')
+
+  // Fetch staff list
+  const fetchStaff = useCallback(async () => {
+    try {
+      const res = await fetch('/api/staff')
+      if (!res.ok) return
+      const data: StaffMember[] = await res.json()
+      setStaff(data)
+    } catch { /* ignore */ }
+  }, [])
 
   // Auto-hide sidebar on mobile
   useEffect(() => {
@@ -65,6 +75,9 @@ export default function AdminDashboardPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
+  // Initial staff fetch
+  useEffect(() => { fetchStaff() }, [fetchStaff])
+
   // Poll /api/bookings every 3 seconds
   useEffect(() => {
     const poll = async () => {
@@ -74,21 +87,19 @@ export default function AdminDashboardPage() {
         const data: BookingEntry[] = await res.json()
         setBookings(data)
 
-        // Show popup only for 'new' bookings not yet shown this session
         const unseen = data.filter(b => b.status === 'new' && !shownIdsRef.current.has(b.id))
         if (unseen.length > 0) {
           const latest = unseen[unseen.length - 1]!
           shownIdsRef.current.add(latest.id)
           setNotification(latest)
         }
-      } catch { /* ignore network errors */ }
+      } catch { /* ignore */ }
     }
     poll()
     const interval = setInterval(poll, 3000)
     return () => clearInterval(interval)
   }, [])
 
-  // X button: mark as dismissed (don't show popup again), red dot stays
   async function dismissNotification() {
     if (!notification) return
     await patchBooking(notification.id, 'dismissed')
@@ -96,15 +107,11 @@ export default function AdminDashboardPage() {
     setNotification(null)
   }
 
-  // Bell click: show the latest unconfirmed booking as notification
   function handleBellClick() {
     const unconfirmed = bookings.filter(b => b.status === 'new' || b.status === 'dismissed')
-    if (unconfirmed.length > 0) {
-      setNotification(unconfirmed[unconfirmed.length - 1]!)
-    }
+    if (unconfirmed.length > 0) setNotification(unconfirmed[unconfirmed.length - 1]!)
   }
 
-  // "Перейти к записи": confirm + navigate to that date
   async function confirmAndGo(booking: BookingEntry) {
     await patchBooking(booking.id, 'confirmed')
     setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, status: 'confirmed' } : b))
@@ -112,7 +119,6 @@ export default function AdminDashboardPage() {
     setNotification(null)
   }
 
-  // Only show CONFIRMED bookings in the schedule grid
   const dateStr = toDateStr(selectedDate)
   const dayAppointments: Appointment[] = bookings
     .filter(b => b.status === 'confirmed' && b.date === dateStr)
@@ -128,6 +134,14 @@ export default function AdminDashboardPage() {
         staffId:     b.staffId,
       }
     })
+
+  const bottomBar = [
+    { icon: TrendingUp,  label: 'Выручка',        onClick: () => {} },
+    { icon: ShoppingBag, label: 'Продажа',         onClick: () => {} },
+    { icon: Filter,      label: 'Фильтры',         onClick: () => {} },
+    { icon: Search,      label: 'Найти клиента',   onClick: () => setShowSearch(true) },
+    { icon: UserPlus,    label: 'Добавить',         onClick: () => setShowAddStaff(true) },
+  ] as const
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 relative">
@@ -157,8 +171,8 @@ export default function AdminDashboardPage() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <DashboardHeader
           selectedDate={selectedDate}
-          onPrev={()  => setSelectedDate(d => addDays(d, viewMode === 'day' ? -1 : -7))}
-          onNext={()  => setSelectedDate(d => addDays(d, viewMode === 'day' ?  1 :  7))}
+          onPrev={()   => setSelectedDate(d => addDays(d, viewMode === 'day' ? -1 : -7))}
+          onNext={()   => setSelectedDate(d => addDays(d, viewMode === 'day' ?  1 :  7))}
           onToday={()  => setSelectedDate(new Date())}
           viewMode={viewMode}
           onViewChange={setViewMode}
@@ -168,12 +182,12 @@ export default function AdminDashboardPage() {
 
         <div className="flex-1 overflow-hidden bg-white relative">
           <ScheduleGrid
-            staff={STAFF}
+            staff={staff}
             appointments={dayAppointments}
             selectedDate={selectedDate}
           />
 
-          {/* Mobile floating Сегодня — raised above bottom bar */}
+          {/* Mobile floating Сегодня */}
           <button
             onClick={() => setSelectedDate(new Date())}
             className="md:hidden fixed bottom-20 right-4 px-4 py-2 bg-white border border-slate-200
@@ -186,15 +200,10 @@ export default function AdminDashboardPage() {
 
       {/* Mobile admin bottom bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 flex">
-        {([
-          { icon: TrendingUp, label: 'Выручка'           },
-          { icon: ShoppingBag, label: 'Продажа'          },
-          { icon: Filter,      label: 'Фильтры'          },
-          { icon: Search,      label: 'Найти клиента'    },
-          { icon: UserPlus,    label: 'Добавить'          },
-        ] as const).map(({ icon: Icon, label }) => (
+        {bottomBar.map(({ icon: Icon, label, onClick }) => (
           <button
             key={label}
+            onClick={onClick}
             className="flex-1 flex flex-col items-center gap-1 py-3 text-slate-500 hover:text-slate-800 transition-colors"
           >
             <Icon className="w-5 h-5" />
@@ -203,13 +212,12 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* New booking notification popup — shifts right of sidebar on desktop */}
+      {/* Notification popup */}
       {notification && (
         <div
           className="group fixed bottom-6 z-50 w-72 bg-[#1e1f2d] rounded-2xl p-4 shadow-2xl transition-all duration-300"
           style={{ left: !isMobile && sidebarOpen ? '228px' : '16px' }}
         >
-          {/* X: on desktop shows on hover; on mobile always visible */}
           <button
             onClick={dismissNotification}
             className={cn(
@@ -246,6 +254,19 @@ export default function AdminDashboardPage() {
             Перейти к записи
           </button>
         </div>
+      )}
+
+      {/* Search client modal */}
+      {showSearch && (
+        <SearchClientModal bookings={bookings} onClose={() => setShowSearch(false)} />
+      )}
+
+      {/* Add staff modal */}
+      {showAddStaff && (
+        <AddStaffModal
+          onClose={() => setShowAddStaff(false)}
+          onAdded={fetchStaff}
+        />
       )}
 
     </div>
