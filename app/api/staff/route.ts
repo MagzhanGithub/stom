@@ -4,6 +4,8 @@ export interface StaffEntry {
   id: string
   name: string
   role: string
+  phone?: string
+  schedule?: { days: number[]; from: string; to: string }
   createdAt: number
 }
 
@@ -42,8 +44,10 @@ export async function POST(req: Request) {
   const body = await req.json()
   const entry: StaffEntry = {
     id:        crypto.randomUUID(),
-    name:      body.name ?? '—',
-    role:      body.role ?? '—',
+    name:      body.name     ?? '—',
+    role:      body.role     ?? '—',
+    phone:     body.phone    ?? '',
+    schedule:  body.schedule ?? null,
     createdAt: Date.now(),
   }
   if (!useSupabase) {

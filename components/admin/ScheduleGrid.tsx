@@ -60,7 +60,6 @@ function isSameDay(a: Date, b: Date) {
 
 export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff }: Props) {
   const [now, setNow] = useState(new Date())
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000)
@@ -98,26 +97,12 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
 
             {/* Delete button — only for real staff */}
             {onDeleteStaff && member.id !== '__empty__' && (
-              confirmDeleteId === member.id ? (
-                <div className="absolute top-1 right-1 flex items-center gap-1 bg-white border border-red-200 rounded-lg px-1.5 py-0.5 shadow-sm">
-                  <span className="text-[10px] text-red-500 font-medium">Удалить?</span>
-                  <button
-                    onClick={() => { onDeleteStaff(member.id); setConfirmDeleteId(null) }}
-                    className="text-[10px] font-bold text-red-500 hover:text-red-700 px-1"
-                  >Да</button>
-                  <button
-                    onClick={() => setConfirmDeleteId(null)}
-                    className="text-[10px] text-slate-400 hover:text-slate-600 px-1"
-                  >Нет</button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setConfirmDeleteId(member.id)}
-                  className="absolute top-1 right-1 p-1 rounded-md text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              )
+              <button
+                onClick={() => onDeleteStaff(member.id)}
+                className="absolute top-1 right-1 p-1 rounded-md text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
             )}
           </div>
         ))}

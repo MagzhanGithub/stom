@@ -8,6 +8,7 @@ import DashboardHeader from '@/components/admin/DashboardHeader'
 import ScheduleGrid, { type Appointment, type StaffMember } from '@/components/admin/ScheduleGrid'
 import SearchClientModal from '@/components/admin/SearchClientModal'
 import AddStaffModal from '@/components/admin/AddStaffModal'
+import DeleteStaffModal from '@/components/admin/DeleteStaffModal'
 import type { BookingEntry } from '@/app/api/bookings/route'
 
 const ADMIN_LOGIN = 'magzhan'
@@ -47,8 +48,9 @@ export default function AdminDashboardPage() {
   const [bookings,     setBookings]     = useState<BookingEntry[]>([])
   const [staff,        setStaff]        = useState<StaffMember[]>([])
   const [notification, setNotification] = useState<BookingEntry | null>(null)
-  const [showSearch,   setShowSearch]   = useState(false)
-  const [showAddStaff, setShowAddStaff] = useState(false)
+  const [showSearch,      setShowSearch]      = useState(false)
+  const [showAddStaff,    setShowAddStaff]    = useState(false)
+  const [deleteStaffItem, setDeleteStaffItem] = useState<StaffMember | null>(null)
   const shownIdsRef = useRef(new Set<string>())
 
   const hasUnread = bookings.some(b => b.status === 'new' || b.status === 'dismissed')
@@ -69,6 +71,7 @@ export default function AdminDashboardPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     }).catch(() => {})
+    setDeleteStaffItem(null)
     fetchStaff()
   }
 
@@ -194,7 +197,10 @@ export default function AdminDashboardPage() {
             staff={staff}
             appointments={dayAppointments}
             selectedDate={selectedDate}
-            onDeleteStaff={deleteStaff}
+            onDeleteStaff={id => {
+              const member = staff.find(s => s.id === id)
+              if (member) setDeleteStaffItem(member)
+            }}
           />
 
           {/* Mobile floating Сегодня */}
@@ -276,6 +282,15 @@ export default function AdminDashboardPage() {
         <AddStaffModal
           onClose={() => setShowAddStaff(false)}
           onAdded={fetchStaff}
+        />
+      )}
+
+      {/* Delete staff modal */}
+      {deleteStaffItem && (
+        <DeleteStaffModal
+          staff={deleteStaffItem}
+          onClose={() => setDeleteStaffItem(null)}
+          onConfirm={() => deleteStaff(deleteStaffItem.id)}
         />
       )}
 
