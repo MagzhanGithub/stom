@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Search, UserPlus } from 'lucide-react'
+import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Sidebar from '@/components/admin/Sidebar'
 import DashboardHeader from '@/components/admin/DashboardHeader'

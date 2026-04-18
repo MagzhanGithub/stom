@@ -119,7 +119,7 @@ export default function BookingModal() {
         )
       })
       .catch(() => {})
-  }, [form.date, form.staffId, isMultiStaff])
+  }, [form.date, form.staffId, isMultiStaff, staffList])
 
   // Lock body scroll
   useEffect(() => {
