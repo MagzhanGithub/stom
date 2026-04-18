@@ -59,6 +59,13 @@ function localDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
+// Skip Sundays — clinic is closed
+function nextAvailableDate(): string {
+  const d = new Date()
+  while (d.getDay() === 0) d.setDate(d.getDate() + 1)
+  return localDateStr(d)
+}
+
 export default function BookingModal() {
   const [isOpen,    setIsOpen]    = useState(false)
   const [step,      setStep]      = useState(1)
@@ -343,7 +350,7 @@ export default function BookingModal() {
                     <button
                       key={s.id}
                       ref={!isMultiStaff && (s.id === form.serviceId || (!form.serviceId && services[0]?.id === s.id)) ? firstFocusRef : undefined}
-                      onClick={() => { update('serviceId', s.id); update('date', today); update('time', ''); setStep(2 + S) }}
+                      onClick={() => { update('serviceId', s.id); update('date', nextAvailableDate()); update('time', ''); setStep(2 + S) }}
                       className={cn(
                         'flex items-center justify-between px-4 py-3 rounded-xl border text-left',
                         'transition-all duration-150 hover:border-brand hover:bg-brand-lighter',
@@ -416,7 +423,7 @@ export default function BookingModal() {
                       const dateStr  = `${calView.year}-${mm}-${dd}`
                       const weekend  = isWeekend(calView.year, calView.month, cell.day)
                       const disabled = dateStr < today || dateStr > maxDate || weekend
-                      const selected = form.date === dateStr
+                      const selected = !disabled && form.date === dateStr
                       return (
                         <button
                           key={i}

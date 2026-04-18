@@ -65,7 +65,7 @@ document.body.appendChild(a); a.click(); document.body.removeChild(a)
 
 `formatDate(iso)` in `BookingModal.tsx` converts `YYYY-MM-DD` → `DD.MM.YYYY` for display.
 
-Date selection uses an inline calendar (not `<input type="date">`). Sundays are disabled. Saturdays only show slots up to 12:30. Past time slots are disabled when today is selected. Already-confirmed slots are fetched and disabled to prevent double-booking.
+Date selection uses an inline calendar (not `<input type="date">`). Sundays are disabled. Saturdays only show slots up to 12:30. Past time slots are disabled when today is selected. Already-confirmed slots are fetched and disabled to prevent double-booking. `localDateStr(d)` builds `YYYY-MM-DD` from local timezone (never `toISOString()` which returns UTC and shows yesterday in UTC+5). `nextAvailableDate()` returns today or the next non-Sunday — used as the pre-selected date when a service is chosen. The calendar `selected` check is `!disabled && form.date === dateStr` to prevent disabled dates (Sundays) from appearing highlighted.
 
 ### Server vs Client components
 
@@ -94,7 +94,9 @@ The canonical dark color used throughout admin UI is `#0d1a2b` (equals `bg-navy`
 
 | Layer | z-index |
 |-------|---------|
-| Header | 20 |
+| Site header | 20 |
+| ScheduleGrid sticky time columns | 20 |
+| ScheduleGrid sticky header row | 30 |
 | Backdrop | 30 |
 | Mobile nav drawer | 40 |
 | Mobile bottom bar | 50 |
@@ -147,7 +149,7 @@ Multi-account JWT auth via `jose`. Two account tiers:
 - `Sidebar.tsx` — dark sidebar (`bg-[#0d1a2b]`): mini calendar, quick actions grid, Избранное, user+logout. `isAdmin` prop hides "Добавить сотрудника" button. Bell icon shows red dot when there are unconfirmed bookings; clicking it opens the notification popup. On mobile: hidden by default, opens as fixed overlay with backdrop.
 - `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days. Syncs with header date nav via `useEffect` on `selectedDate` prop. Today style: `bg-white/20` circle when not selected, `bg-[#4ddde2] text-[#0d1a2b]` when selected+today.
 - `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. Shows red dot on toggle button when sidebar is closed and there are unread notifications. On mobile: abbreviated date ("16 апр"), filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
-- `ScheduleGrid.tsx` — time grid 09:00–19:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time: pill in left time column + `h-px` line across staff columns (both `#0d1a2b`). Left and right time columns use `position: sticky` with `zIndex: 20` (must be ≥20 to paint over appointment cards). Staff columns have `overflow-hidden` to prevent cards bleeding over sticky columns. Header and grid share a single `overflow-auto` scroll container; header uses `sticky top-0`. Both header row and grid row have a `w-2 flex-shrink-0 md:hidden` end-spacer so the last column's right border is visible on mobile. `isFullView` prop: when `true` (main admin), orphaned bookings (unknown `staffId`) go to the first column; when `false` (staff account) orphaned bookings are hidden.
+- `ScheduleGrid.tsx` — time grid 09:00–19:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time: pill in left time column + `h-px` line across staff columns (both `#0d1a2b`). Left and right time columns use `position: sticky` with `zIndex: 20`; the sticky header row uses `z-30` (must be higher than time columns so "09:00" label doesn't bleed over the person icon when scrolled). Staff columns must NOT have `overflow-hidden` or `zIndex: 0` — those trigger Chrome compositing layer promotion that makes staff columns paint above the sticky header. A white bleed-cover `div` (`absolute inset-y-0 left-full w-2 bg-white`) inside the left time column masks rounded card corners at the boundary. Header `div` uses `min-w-max` so `border-b` extends to full content width (beyond viewport) when many staff columns exist. Both header row and grid row have a `w-2 flex-shrink-0 md:hidden` end-spacer so the last column's right border is visible on mobile. `isFullView` prop: when `true` (main admin), orphaned bookings (unknown `staffId`) go to the first column; when `false` (staff account) orphaned bookings are hidden.
 - `AddStaffModal.tsx` — bottom-sheet modal, inputs: Имя, Должность, Телефон, Пароль. `autoComplete="off"` on text fields, `autoComplete="new-password"` on password field (prevents browser autofill bleed). `POST /api/staff`.
 - `SearchClientModal.tsx` — bottom-sheet modal, filters `bookings` prop by clientName/phone in-memory (no API call).
 - `DeleteStaffModal.tsx` — confirmation modal before calling `DELETE /api/staff`.

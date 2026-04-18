@@ -79,7 +79,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
       <div className="w-full md:min-w-max">
 
       {/* Staff header — scrolls together with grid */}
-      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 flex min-w-max">
+      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 flex min-w-max">
         {/* Single person icon in the time column area */}
         <div
           className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white border-r border-slate-200"
