@@ -416,7 +416,7 @@ export default function BookingModal() {
                             'w-8 h-8 mx-auto rounded-full text-[13px] font-medium transition-colors',
                             disabled && 'text-text-muted/40 cursor-not-allowed',
                             !disabled && !selected && 'hover:bg-surface-2 text-text-primary',
-                            selected && 'bg-[#1e1f2d] text-white font-bold',
+                            selected && 'bg-[#0d1a2b] text-white font-bold',
                           )}
                         >
                           {cell.day}
@@ -452,8 +452,8 @@ export default function BookingModal() {
                                         disabled
                                           ? 'border-border text-slate-300 bg-slate-50 cursor-not-allowed line-through'
                                           : form.time === t
-                                            ? 'bg-[#1e1f2d] border-[#1e1f2d] text-white'
-                                            : 'border-border hover:border-[#1e1f2d] hover:bg-slate-50 text-text-secondary',
+                                            ? 'bg-[#0d1a2b] border-[#0d1a2b] text-white'
+                                            : 'border-border hover:border-[#0d1a2b] hover:bg-slate-50 text-text-secondary',
                                       )}
                                     >
                                       {t}

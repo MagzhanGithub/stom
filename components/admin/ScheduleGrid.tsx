@@ -83,7 +83,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
         {/* Single person icon in the time column area */}
         <div
           className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white border-r border-slate-200"
-          style={{ position: 'sticky', left: 0, zIndex: 10 }}
+          style={{ position: 'sticky', left: 0, zIndex: 20 }}
         >
           <User className="w-4 h-4 text-slate-300" />
         </div>
@@ -108,6 +108,8 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
           </div>
         ))}
 
+        {/* Mobile end spacer so last column right border is visible */}
+        <div className="w-2 flex-shrink-0 md:hidden" />
         {/* Spacer matching right time column */}
         <div className="hidden md:block w-16 flex-shrink-0" />
       </div>
@@ -119,7 +121,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
           {/* Left time column — sticky left */}
           <div
             className="w-12 md:w-16 flex-shrink-0 bg-white border-r border-slate-200 relative"
-            style={{ position: 'sticky', left: 0, zIndex: 10 }}
+            style={{ position: 'sticky', left: 0, zIndex: 20 }}
           >
             {/* Current time pill — inside left column */}
             {showTimeLine && (
@@ -127,7 +129,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
                 className="absolute right-0 z-20 pointer-events-none pr-1"
                 style={{ top: currentTopPx - 9 }}
               >
-                <div className="bg-[#1e1f2d] text-white text-[10px] font-bold rounded px-1.5 py-0.5 leading-none whitespace-nowrap">
+                <div className="bg-[#0d1a2b] text-white text-[10px] font-bold rounded px-1.5 py-0.5 leading-none whitespace-nowrap">
                   {String(now.getHours()).padStart(2, '0')}:{String(now.getMinutes()).padStart(2, '0')}
                 </div>
               </div>
@@ -164,7 +166,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
             return (
               <div
                 key={member.id}
-                className="flex-shrink-0 min-w-[calc(46vw-20px)] md:flex-1 md:min-w-[320px] border-l border-r border-slate-200"
+                className="flex-shrink-0 min-w-[calc(46vw-20px)] md:flex-1 md:min-w-[320px] border-l border-r border-slate-200 overflow-hidden"
                 style={{ position: 'relative', height: gridHeight }}
               >
                 {/* Grid lines */}
@@ -184,7 +186,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
                 {/* Current time horizontal line */}
                 {showTimeLine && (
                   <div
-                    className="absolute left-0 right-0 h-px bg-[#1e1f2d] z-10 pointer-events-none"
+                    className="absolute left-0 right-0 h-px bg-[#0d1a2b] z-10 pointer-events-none"
                     style={{ top: currentTopPx }}
                   />
                 )}
@@ -218,6 +220,9 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
               </div>
             )
           })}
+
+          {/* Mobile end spacer so last column right border is visible */}
+          <div className="w-2 flex-shrink-0 md:hidden" />
 
           {/* Right time column — sticky right, desktop only */}
           <div

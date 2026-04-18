@@ -14,7 +14,8 @@ export const clinic = {
   telegramUrl:       'https://t.me/zhanardent', // TODO: заменить на реальный username
   siteUrl:           'https://zhanardent.kz',   // TODO: заменить на реальный домен
   coordinates:       { lat: 51.143688, lng: 71.455375 },
-  mapEmbedSrc:       'https://widgets.2gis.com/widget?type=firmsonmap&options=%7B%22firmIds%22%3A%5B%229570784863334398%22%5D%2C%22pos%22%3A%7B%22lat%22%3A51.143688%2C%22lon%22%3A71.455375%2C%22zoom%22%3A17%7D%2C%22transport%22%3Afalse%7D',
+  mapEmbedSrc:       'https://www.openstreetmap.org/export/embed.html?bbox=71.4520%2C51.1415%2C71.4590%2C51.1460&layer=mapnik&marker=51.143688%2C71.455375',
+  map2gisUrl:        'https://2gis.kz/astana/geo/9570784863334398/71.455375,51.143688',
   foundedYear:       2015,
   patientsCount:     '3 000+',
   googleRating:      4.9,

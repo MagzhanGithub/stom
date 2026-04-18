@@ -126,7 +126,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
                     className={cn(
                       'w-9 h-9 rounded-full text-xs font-semibold transition-colors flex-shrink-0',
                       days.includes(i)
-                        ? 'bg-[#1e1f2d] text-white'
+                        ? 'bg-[#0d1a2b] text-white'
                         : 'bg-slate-100 text-slate-500 hover:bg-slate-200',
                     )}
                   >
@@ -164,7 +164,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
             <button
               onClick={submit}
               disabled={loading || !name.trim() || !role.trim() || !phone.trim() || !password.trim()}
-              className="w-full py-3 bg-[#1e1f2d] text-white font-semibold rounded-xl
+              className="w-full py-3 bg-[#0d1a2b] text-white font-semibold rounded-xl
                          disabled:opacity-40 transition-opacity mt-2"
             >
               {loading ? 'Добавляем...' : 'Добавить'}

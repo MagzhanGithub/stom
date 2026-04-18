@@ -30,7 +30,7 @@ export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNot
   }
 
   return (
-    <aside className="w-[220px] flex-shrink-0 bg-[#1e1f2d] flex flex-col h-full overflow-y-auto">
+    <aside className="w-[220px] flex-shrink-0 bg-[#0d1a2b] flex flex-col h-full overflow-y-auto">
 
       {/* Logo + bell (bell toggles sidebar) */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">

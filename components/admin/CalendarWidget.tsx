@@ -110,8 +110,8 @@ export default function CalendarWidget({ selectedDate, onSelect }: Props) {
                 !cell.current && 'text-slate-600 cursor-default',
                 cell.current && !isSelected && !isToday && 'text-slate-300 hover:bg-white/10',
                 isToday && !isSelected && 'bg-white/20 text-white font-bold',
-                isSelected && !isToday && 'bg-white text-[#1e1f2d] font-bold',
-                isSelected && isToday && 'bg-[#4ddde2] text-[#1e1f2d] font-bold',
+                isSelected && !isToday && 'bg-white text-[#0d1a2b] font-bold',
+                isSelected && isToday && 'bg-[#4ddde2] text-[#0d1a2b] font-bold',
               )}
             >
               {cell.day}

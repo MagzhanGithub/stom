@@ -118,16 +118,33 @@ export default function MapSection() {
           </div>
 
           {/* Map */}
-          <div className="rounded-2xl overflow-hidden shadow-md aspect-[4/3] lg:aspect-auto lg:h-[420px]">
-            <iframe
-              title={`Карта: ${clinic.name} — ${clinic.fullAddress}`}
-              src={clinic.mapEmbedSrc ?? `https://maps.google.com/maps?q=${encodeURIComponent(clinic.fullAddress)}&z=16&output=embed`}
-              width="100%"
-              height="100%"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="border-0 w-full h-full"
-            />
+          <div className="flex flex-col gap-3">
+            <div className="rounded-2xl overflow-hidden shadow-md aspect-[4/3] lg:aspect-auto lg:h-[380px]">
+              <iframe
+                title={`Карта: ${clinic.name} — ${clinic.fullAddress}`}
+                src={clinic.mapEmbedSrc ?? `https://maps.google.com/maps?q=${encodeURIComponent(clinic.fullAddress)}&z=16&output=embed`}
+                width="100%"
+                height="100%"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="border-0 w-full h-full"
+              />
+            </div>
+            {clinic.map2gisUrl && (
+              <a
+                href={clinic.map2gisUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+                           bg-[#1CA234] hover:bg-[#179030] text-white text-sm font-semibold
+                           transition-colors self-start"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+                Открыть в 2GIS
+              </a>
+            )}
           </div>
 
         </div>

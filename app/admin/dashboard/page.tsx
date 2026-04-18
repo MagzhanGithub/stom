@@ -245,7 +245,7 @@ export default function AdminDashboardPage() {
       {/* Notification popup */}
       {notification && (
         <div
-          className="group fixed bottom-6 z-50 w-72 bg-[#1e1f2d] rounded-2xl p-4 shadow-2xl transition-all duration-300"
+          className="group fixed bottom-6 z-50 w-72 bg-[#0d1a2b] rounded-2xl p-4 shadow-2xl transition-all duration-300"
           style={{ left: !isMobile && sidebarOpen ? '228px' : '16px' }}
         >
           <button
@@ -278,7 +278,7 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => confirmAndGo(notification)}
-            className="w-full py-2 bg-yellow-400 hover:bg-yellow-300 text-[#1e1f2d]
+            className="w-full py-2 bg-yellow-400 hover:bg-yellow-300 text-[#0d1a2b]
                        text-sm font-bold rounded-xl transition-colors"
           >
             Перейти к записи
