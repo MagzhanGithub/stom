@@ -22,7 +22,7 @@ Next.js 14 App Router · TypeScript strict · Tailwind CSS v3 · Framer Motion v
 ### Data layer — single source of truth
 
 All clinic data lives in `lib/`:
-- `lib/config.ts` — clinic name, phone, address, hours, coordinates, `mapEmbedSrc` (Google Maps embed URL using plus code). **Never hardcode clinic data in components.**
+- `lib/config.ts` — clinic name, phone, address, hours, coordinates, `mapEmbedSrc` (OpenStreetMap iframe embed), `map2gisUrl` (external 2GIS link). **Never hardcode clinic data in components.**
 - `lib/services.ts` — 7 service categories with KZT price items; `getServiceBySlug()` for dynamic pages
 - `lib/types.ts` — all shared TypeScript interfaces including `ClinicConfig`
 - `lib/faq.ts`, `lib/reviews.ts` — static content arrays
@@ -86,6 +86,8 @@ Named variants work normally: `brand-dark`, `brand-lighter`, `navy-light`, `cta-
 
 **White text on `brand` (teal #4ddde2) fails WCAG AA** (contrast 2.1:1). Never use `text-white` on teal backgrounds. Use `text-navy` instead.
 
+The canonical dark color used throughout admin UI is `#0d1a2b` (equals `bg-navy`). Do not introduce `#1e1f2d` or other near-navy values.
+
 ### z-index stack
 
 `z-60` is a **custom value** defined in `tailwind.config.ts` under `extend.zIndex`. Standard Tailwind only goes to `z-50`.
@@ -116,40 +118,72 @@ Named variants work normally: `brand-dark`, `brand-lighter`, `navy-light`, `cta-
 
 ### Admin panel (`/admin/*`)
 
-Single-admin JWT auth via `jose`. Credentials stored in env vars `ADMIN_LOGIN` / `ADMIN_PASSWORD` (fallback hardcoded for dev). JWT secret in `JWT_SECRET`.
+Multi-account JWT auth via `jose`. Two account tiers:
+
+**Main admin** (`magzhan` / `1235`, or env `ADMIN_LOGIN`/`ADMIN_PASSWORD`):
+- JWT payload: `{ role: 'admin', staffId: null }`
+- Sees all staff columns in schedule grid
+- Can add/delete staff
+
+**Staff accounts** (name = login, `password` field in `staff` Supabase table):
+- JWT payload: `{ role: 'staff', staffId: '<uuid>' }`
+- Sees only their own column in schedule grid
+- Add-staff button hidden
 
 **Auth flow:**
-- `POST /api/auth/login` — validates credentials, sets `admin_token` httpOnly cookie (8h, HS256 JWT)
+- `POST /api/auth/login` — checks main admin credentials first, then queries Supabase `staff` table by name (`.ilike`) + password match; sets `admin_token` httpOnly cookie (8h, HS256 JWT)
+- `GET /api/me` — reads JWT cookie, returns `{ role, staffId }` (null values when unauthenticated)
 - `POST /api/auth/logout` — clears the cookie, redirects to `/`
 - `middleware.ts` — protects `/admin/dashboard` routes; redirects unauthenticated to `/admin/login`
 - "Войти" links go directly to `/admin/login` (never to `/admin`) so the login form always shows
 
+**Dashboard scope control** (`app/admin/dashboard/page.tsx`):
+- Fetches `/api/me` on mount → `myStaffId` state
+- `visibleStaff = myStaffId ? staff.filter(s => s.id === myStaffId) : staff`
+- Passes `isAdmin={!myStaffId}` to Sidebar (hides "Добавить сотрудника" for staff)
+- Passes `isFullView={!myStaffId}` to ScheduleGrid (controls orphaned booking display)
+
 **Admin components** (`components/admin/`):
-- `Sidebar.tsx` — dark sidebar (`bg-[#1e1f2d]`): mini calendar, quick actions grid, Избранное, user+logout. Bell icon shows red dot when there are unconfirmed bookings; clicking it opens the notification popup. On mobile: hidden by default, opens as fixed overlay with backdrop.
-- `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days. Syncs with header date nav via `useEffect` on `selectedDate` prop.
-- `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. Shows red dot on toggle button when sidebar is closed and there are unread notifications. On mobile: abbreviated date ("16 апр"), Продать/filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
-- `ScheduleGrid.tsx` — time grid 09:00–19:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time: pill in left time column + black `h-px` line across staff columns. Left and right time columns use `position: sticky`. Right time column hidden on mobile (`hidden md:block`). Staff columns are dynamic (from `/api/staff`); when no staff exist, a single empty placeholder column renders via `displayStaff` fallback. Header and grid share a single `overflow-auto` scroll container; header uses `sticky top-0` so it stays visible on vertical scroll while scrolling horizontally with the grid.
-- `AddStaffModal.tsx` — bottom-sheet modal, inputs: Имя + Должность, `POST /api/staff`, calls `onAdded()` on success.
+- `Sidebar.tsx` — dark sidebar (`bg-[#0d1a2b]`): mini calendar, quick actions grid, Избранное, user+logout. `isAdmin` prop hides "Добавить сотрудника" button. Bell icon shows red dot when there are unconfirmed bookings; clicking it opens the notification popup. On mobile: hidden by default, opens as fixed overlay with backdrop.
+- `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days. Syncs with header date nav via `useEffect` on `selectedDate` prop. Today style: `bg-white/20` circle when not selected, `bg-[#4ddde2] text-[#0d1a2b]` when selected+today.
+- `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. Shows red dot on toggle button when sidebar is closed and there are unread notifications. On mobile: abbreviated date ("16 апр"), filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
+- `ScheduleGrid.tsx` — time grid 09:00–19:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time: pill in left time column + `h-px` line across staff columns (both `#0d1a2b`). Left and right time columns use `position: sticky` with `zIndex: 20` (must be ≥20 to paint over appointment cards). Staff columns have `overflow-hidden` to prevent cards bleeding over sticky columns. Header and grid share a single `overflow-auto` scroll container; header uses `sticky top-0`. Both header row and grid row have a `w-2 flex-shrink-0 md:hidden` end-spacer so the last column's right border is visible on mobile. `isFullView` prop: when `true` (main admin), orphaned bookings (unknown `staffId`) go to the first column; when `false` (staff account) orphaned bookings are hidden.
+- `AddStaffModal.tsx` — bottom-sheet modal, inputs: Имя, Должность, Телефон, Пароль. `autoComplete="off"` on text fields, `autoComplete="new-password"` on password field (prevents browser autofill bleed). `POST /api/staff`.
 - `SearchClientModal.tsx` — bottom-sheet modal, filters `bookings` prop by clientName/phone in-memory (no API call).
+- `DeleteStaffModal.tsx` — confirmation modal before calling `DELETE /api/staff`.
 
 **Mobile sidebar toggle:** `isMobile` state (from `useEffect` + resize listener) controls whether sidebar is a flex item (desktop) or a fixed overlay (mobile).
 
-**Mobile admin bottom bar** (fixed, `md:hidden`, `z-40`): 5 buttons — Выручка, Продажа, Фильтры, Найти клиента (opens `SearchClientModal`), Добавить (opens `AddStaffModal`).
+**Mobile admin bottom bar** (fixed, `md:hidden`, `z-40`): 4 buttons — Выручка, Продажа, Фильтры, Найти клиента (opens `SearchClientModal`).
 
 ### Booking and Staff APIs
 
 `app/api/bookings/route.ts` — persists to **Supabase PostgreSQL** (`bookings` table). Falls back to an in-memory array only when `SUPABASE_SECRET_KEY` / `NEXT_PUBLIC_SUPABASE_URL` env vars are missing (local dev without credentials).
 
-`app/api/staff/route.ts` — persists to **Supabase PostgreSQL** (`staff` table). In-memory fallback when Supabase absent. `GET` returns Supabase data (empty array if table empty — no hardcoded defaults). `POST` inserts a new `StaffEntry` (`id`, `name`, `role`, `createdAt`).
+`app/api/staff/route.ts` — persists to **Supabase PostgreSQL** (`staff` table). In-memory fallback when Supabase absent. `GET` returns data with `password` field stripped via `omitPassword()`. `POST` stores `name`, `role`, `phone`, `password`, `schedule`, `createdAt`.
 
 **Required Supabase tables:**
 ```sql
--- bookings table (see plan file for full schema)
--- staff table:
+create table bookings (
+  id text primary key,
+  "clientName" text not null,
+  phone text not null,
+  service text not null,
+  "serviceId" text not null,
+  date text not null,
+  time text not null,
+  "staffId" text not null,
+  "createdAt" bigint not null,
+  status text not null default 'new'
+);
+
 create table staff (
   id text primary key,
   name text not null,
   role text not null,
+  phone text,
+  password text,
+  schedule jsonb,
   "createdAt" bigint not null
 );
 ```
@@ -157,6 +191,8 @@ create table staff (
 **Required env vars** (Vercel + `.env.local`):
 - `NEXT_PUBLIC_SUPABASE_URL` — project URL (`https://<id>.supabase.co`)
 - `SUPABASE_SECRET_KEY` — secret key (bypasses RLS; server-side only)
+- `ADMIN_LOGIN` / `ADMIN_PASSWORD` — main admin credentials (fallback: `magzhan`/`1235`)
+- `JWT_SECRET` — JWT signing secret
 
 `lib/supabase.ts` — lazy singleton `getSupabase()` (avoids build-time init error when env vars are absent).
 
