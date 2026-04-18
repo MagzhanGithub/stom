@@ -25,6 +25,7 @@ interface Props {
   appointments: Appointment[]
   selectedDate?: Date
   onDeleteStaff?: (id: string) => void
+  isFullView?: boolean  // true = main admin (orphaned bookings go to first column)
 }
 
 const START_HOUR  = 9
@@ -58,7 +59,7 @@ function isSameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
 }
 
-export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff }: Props) {
+export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff, isFullView = true }: Props) {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
           className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white"
           style={{ position: 'sticky', left: 0 }}
         >
-          <User className="w-4 h-4 text-slate-300 md:hidden" />
+          <User className="w-4 h-4 text-slate-300" />
         </div>
 
         {displayStaff.map(member => (
@@ -157,8 +158,8 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
               ? appointments
               : [
                   ...appointments.filter(a => a.staffId === member.id),
-                  // orphaned bookings (staffId unknown) go to first column
-                  ...(colIdx === 0 ? appointments.filter(a => !knownIds.has(a.staffId)) : []),
+                  // orphaned bookings (staffId unknown) go to first column — only when all staff visible
+                  ...(isFullView && colIdx === 0 ? appointments.filter(a => !knownIds.has(a.staffId)) : []),
                 ]
             return (
               <div

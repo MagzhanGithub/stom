@@ -208,6 +208,7 @@ export default function AdminDashboardPage() {
           <ScheduleGrid
             staff={visibleStaff}
             appointments={dayAppointments}
+            isFullView={!myStaffId}
             selectedDate={selectedDate}
             onDeleteStaff={id => {
               const member = staff.find(s => s.id === id)
