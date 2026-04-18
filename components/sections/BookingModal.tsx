@@ -105,11 +105,16 @@ export default function BookingModal() {
     fetch('/api/bookings')
       .then(r => r.json())
       .then((data: { date: string; time: string; status: string; staffId: string }[]) => {
+        const staffIds = new Set(staffList.map(s => s.id))
+        const isFirstStaff = !isMultiStaff || form.staffId === staffList[0]?.id
         setBookedTimes(
           data.filter(b =>
             b.date === form.date &&
             b.status === 'confirmed' &&
-            (!isMultiStaff || b.staffId === form.staffId)
+            (!isMultiStaff
+              ? true
+              : b.staffId === form.staffId || (!staffIds.has(b.staffId) && isFirstStaff)
+            )
           ).map(b => b.time)
         )
       })

@@ -25,7 +25,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
   }
 
   async function submit() {
-    if (!name.trim() || !role.trim()) return
+    if (!name.trim() || !role.trim() || !phone.trim()) return
     setLoading(true)
     await fetch('/api/staff', {
       method: 'POST',
@@ -83,9 +83,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
 
             {/* Phone */}
             <div>
-              <label className="text-sm font-medium text-slate-600 mb-1.5 block">
-                Телефон <span className="text-slate-400 font-normal">(необязательно)</span>
-              </label>
+              <label className="text-sm font-medium text-slate-600 mb-1.5 block">Телефон</label>
               <input
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
@@ -146,7 +144,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
 
             <button
               onClick={submit}
-              disabled={loading || !name.trim() || !role.trim()}
+              disabled={loading || !name.trim() || !role.trim() || !phone.trim()}
               className="w-full py-3 bg-[#1e1f2d] text-white font-semibold rounded-xl
                          disabled:opacity-40 transition-opacity mt-2"
             >

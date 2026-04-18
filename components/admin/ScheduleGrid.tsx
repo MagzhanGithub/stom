@@ -84,7 +84,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
           className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white"
           style={{ position: 'sticky', left: 0 }}
         >
-          <User className="w-4 h-4 text-slate-300" />
+          <User className="w-4 h-4 text-slate-300 md:hidden" />
         </div>
 
         {displayStaff.map(member => (
