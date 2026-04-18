@@ -119,15 +119,15 @@ export default function MapSection() {
 
           {/* Map */}
           <div className="flex flex-col gap-3">
-            <div className="rounded-2xl overflow-hidden shadow-md aspect-[4/3] lg:aspect-auto lg:h-[380px]">
+            <div className="rounded-2xl overflow-hidden shadow-md aspect-[4/3] lg:aspect-auto lg:h-[380px] relative">
               <iframe
                 title={`Карта: ${clinic.name} — ${clinic.fullAddress}`}
                 src={clinic.mapEmbedSrc ?? `https://maps.google.com/maps?q=${encodeURIComponent(clinic.fullAddress)}&z=16&output=embed`}
                 width="100%"
-                height="100%"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                className="border-0 w-full h-full"
+                className="border-0 absolute inset-0 w-full"
+                style={{ height: 'calc(100% + 44px)' }}
               />
             </div>
             {clinic.map2gisUrl && (

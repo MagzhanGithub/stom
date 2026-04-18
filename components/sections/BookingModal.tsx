@@ -55,6 +55,10 @@ function formatDate(iso: string): string {
   return `${d}.${m}.${y}`
 }
 
+function localDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
 export default function BookingModal() {
   const [isOpen,    setIsOpen]    = useState(false)
   const [step,      setStep]      = useState(1)
@@ -188,8 +192,8 @@ export default function BookingModal() {
     setStep(successStep)
   }
 
-  const today    = new Date().toISOString().split('T')[0]!
-  const maxDate  = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0]!
+  const today    = localDateStr(new Date())
+  const maxDate  = localDateStr(new Date(Date.now() + 90 * 86400000))
   const maxCalDate  = new Date(Date.now() + 90 * 86400000)
   const maxCalYear  = maxCalDate.getFullYear()
   const maxCalMonth = maxCalDate.getMonth()

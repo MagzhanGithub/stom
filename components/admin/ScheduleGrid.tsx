@@ -167,7 +167,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
               <div
                 key={member.id}
                 className="flex-shrink-0 min-w-[calc(46vw-20px)] md:flex-1 md:min-w-[320px] border-l border-r border-slate-200 overflow-hidden"
-                style={{ position: 'relative', height: gridHeight }}
+                style={{ position: 'relative', height: gridHeight, zIndex: 0 }}
               >
                 {/* Grid lines */}
                 {Array.from({ length: TOTAL_SLOTS + 1 }).map((_, i) => (
