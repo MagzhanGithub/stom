@@ -141,7 +141,9 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
 
           {/* Staff columns */}
           {displayStaff.map(member => {
-            const memberAppts = appointments
+            const memberAppts = member.id === '__empty__'
+              ? appointments
+              : appointments.filter(a => a.staffId === member.id)
             return (
               <div
                 key={member.id}
