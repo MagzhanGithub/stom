@@ -337,7 +337,7 @@ export default function BookingModal() {
                     <button
                       key={s.id}
                       ref={!isMultiStaff && (s.id === form.serviceId || (!form.serviceId && services[0]?.id === s.id)) ? firstFocusRef : undefined}
-                      onClick={() => { update('serviceId', s.id); update('date', today); setStep(2 + S) }}
+                      onClick={() => { update('serviceId', s.id); update('date', today); update('time', ''); setStep(2 + S) }}
                       className={cn(
                         'flex items-center justify-between px-4 py-3 rounded-xl border text-left',
                         'transition-all duration-150 hover:border-brand hover:bg-brand-lighter',
