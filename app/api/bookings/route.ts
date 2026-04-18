@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     serviceId:  body.serviceId  ?? '',
     date:       body.date       ?? '',
     time:       body.time       ?? '',
-    staffId:    'zhanar',
+    staffId:    body.staffId ?? '',
     createdAt:  Date.now(),
     status:     'new',
   }

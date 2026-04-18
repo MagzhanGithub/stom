@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User } from 'lucide-react'
+import { User, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface Appointment {
@@ -24,6 +24,7 @@ interface Props {
   staff: StaffMember[]
   appointments: Appointment[]
   selectedDate?: Date
+  onDeleteStaff?: (id: string) => void
 }
 
 const START_HOUR  = 9
@@ -57,8 +58,9 @@ function isSameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
 }
 
-export default function ScheduleGrid({ staff, appointments, selectedDate }: Props) {
+export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff }: Props) {
   const [now, setNow] = useState(new Date())
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000)
@@ -89,10 +91,34 @@ export default function ScheduleGrid({ staff, appointments, selectedDate }: Prop
         {displayStaff.map(member => (
           <div
             key={member.id}
-            className="flex-1 min-w-0 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-slate-200"
+            className="flex-1 min-w-0 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-slate-200 relative"
           >
             <p className="text-xs font-semibold text-slate-700">{member.name}</p>
             <p className="text-[10px] text-slate-400">{member.role}</p>
+
+            {/* Delete button — only for real staff */}
+            {onDeleteStaff && member.id !== '__empty__' && (
+              confirmDeleteId === member.id ? (
+                <div className="absolute top-1 right-1 flex items-center gap-1 bg-white border border-red-200 rounded-lg px-1.5 py-0.5 shadow-sm">
+                  <span className="text-[10px] text-red-500 font-medium">Удалить?</span>
+                  <button
+                    onClick={() => { onDeleteStaff(member.id); setConfirmDeleteId(null) }}
+                    className="text-[10px] font-bold text-red-500 hover:text-red-700 px-1"
+                  >Да</button>
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="text-[10px] text-slate-400 hover:text-slate-600 px-1"
+                  >Нет</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDeleteId(member.id)}
+                  className="absolute top-1 right-1 p-1 rounded-md text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )
+            )}
           </div>
         ))}
 

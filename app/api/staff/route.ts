@@ -26,6 +26,18 @@ export async function GET() {
   return Response.json(data ?? [])
 }
 
+export async function DELETE(req: Request) {
+  const { id } = await req.json() as { id: string }
+  if (!useSupabase) {
+    const idx = memStaff.findIndex(s => s.id === id)
+    if (idx !== -1) memStaff.splice(idx, 1)
+    return Response.json({ ok: true })
+  }
+  const { error } = await getSupabase().from('staff').delete().eq('id', id)
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+  return Response.json({ ok: true })
+}
+
 export async function POST(req: Request) {
   const body = await req.json()
   const entry: StaffEntry = {

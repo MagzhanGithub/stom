@@ -63,6 +63,15 @@ export default function AdminDashboardPage() {
     } catch { /* ignore */ }
   }, [])
 
+  async function deleteStaff(id: string) {
+    await fetch('/api/staff', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }).catch(() => {})
+    fetchStaff()
+  }
+
   // Auto-hide sidebar on mobile
   useEffect(() => {
     const check = () => {
@@ -185,6 +194,7 @@ export default function AdminDashboardPage() {
             staff={staff}
             appointments={dayAppointments}
             selectedDate={selectedDate}
+            onDeleteStaff={deleteStaff}
           />
 
           {/* Mobile floating Сегодня */}
