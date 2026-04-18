@@ -106,11 +106,12 @@ export default function CalendarWidget({ selectedDate, onSelect }: Props) {
               key={i}
               onClick={() => cell.current && onSelect(new Date(view.year, view.month, cell.day))}
               className={cn(
-                'text-center text-[11px] py-0.5 rounded leading-5 transition-colors',
+                'text-center text-[11px] leading-5 transition-colors w-7 h-7 mx-auto flex items-center justify-center rounded-full',
                 !cell.current && 'text-slate-600 cursor-default',
                 cell.current && !isSelected && !isToday && 'text-slate-300 hover:bg-white/10',
-                isToday && !isSelected && 'text-white font-bold',
-                isSelected && 'bg-white text-[#1e1f2d] font-bold rounded-full',
+                isToday && !isSelected && 'bg-white/20 text-white font-bold',
+                isSelected && !isToday && 'bg-white text-[#1e1f2d] font-bold',
+                isSelected && isToday && 'bg-[#4ddde2] text-[#1e1f2d] font-bold',
               )}
             >
               {cell.day}
