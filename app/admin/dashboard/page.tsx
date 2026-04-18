@@ -188,6 +188,7 @@ export default function AdminDashboardPage() {
           hasNotification={hasUnread}
           onBellClick={handleBellClick}
           onAddStaff={() => setShowAddStaff(true)}
+          isAdmin={!myStaffId}
         />
       </div>
 

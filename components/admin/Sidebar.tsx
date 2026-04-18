@@ -15,9 +15,10 @@ interface Props {
   hasNotification?: boolean
   onBellClick?: () => void
   onAddStaff?: () => void
+  isAdmin?: boolean
 }
 
-export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNotification, onBellClick, onAddStaff }: Props) {
+export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNotification, onBellClick, onAddStaff, isAdmin = true }: Props) {
   const router = useRouter()
   const [favOpen, setFavOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -52,11 +53,11 @@ export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNot
       {/* Quick actions */}
       <div className="px-3 pb-3 grid grid-cols-2 gap-2 border-b border-white/10">
         {([
-          { icon: ShoppingBag, label: 'Продажа товара', onClick: undefined },
-          { icon: CreditCard,  label: 'Новый платеж',   onClick: undefined },
-          { icon: List,        label: 'Список услуг',   onClick: undefined },
-          { icon: UserPlus,    label: 'Добавить сотрудника', onClick: onAddStaff },
-        ] as const).map(({ icon: Icon, label, onClick }) => (
+          { icon: ShoppingBag, label: 'Продажа товара', onClick: undefined, adminOnly: false },
+          { icon: CreditCard,  label: 'Новый платеж',   onClick: undefined, adminOnly: false },
+          { icon: List,        label: 'Список услуг',   onClick: undefined, adminOnly: false },
+          { icon: UserPlus,    label: 'Добавить сотрудника', onClick: onAddStaff, adminOnly: true },
+        ] as const).filter(item => !item.adminOnly || isAdmin).map(({ icon: Icon, label, onClick }) => (
           <button
             key={label}
             onClick={onClick}

@@ -66,6 +66,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Например: Жанар"
+                autoComplete="off"
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm
                            focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
@@ -78,6 +79,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
                 value={role}
                 onChange={e => setRole(e.target.value)}
                 placeholder="Например: стоматолог"
+                autoComplete="off"
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm
                            focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
@@ -85,13 +87,14 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
 
             {/* Phone */}
             <div>
-              <label className="text-sm font-medium text-slate-600 mb-1.5 block">Телефон</label>
+              <label className="text-sm font-medium text-slate-600 mb-1.5 block">Номер телефона</label>
               <input
                 value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="+7 700 000-00-00"
+                onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="77001234567"
                 type="tel"
-                inputMode="tel"
+                inputMode="numeric"
+                autoComplete="off"
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm
                            focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
@@ -105,6 +108,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
                 onChange={e => setPassword(e.target.value)}
                 placeholder="Пароль для входа в систему"
                 type="password"
+                autoComplete="new-password"
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm
                            focus:outline-none focus:ring-2 focus:ring-slate-300"
               />

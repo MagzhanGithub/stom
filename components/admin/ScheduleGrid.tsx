@@ -91,7 +91,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
         {displayStaff.map(member => (
           <div
             key={member.id}
-            className="flex-1 min-w-0 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-slate-200 relative"
+            className="flex-shrink-0 min-w-[calc(50vw-24px)] md:flex-1 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-slate-200 relative"
           >
             <p className="text-xs font-semibold text-slate-700">{member.name}</p>
             <p className="text-[10px] text-slate-400">{member.role}</p>
@@ -164,7 +164,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
             return (
               <div
                 key={member.id}
-                className="flex-1 min-w-0 md:min-w-[320px] border-l border-r border-slate-200"
+                className="flex-shrink-0 min-w-[calc(50vw-24px)] md:flex-1 md:min-w-[320px] border-l border-r border-slate-200"
                 style={{ position: 'relative', height: gridHeight }}
               >
                 {/* Grid lines */}
