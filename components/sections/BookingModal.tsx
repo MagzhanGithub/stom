@@ -81,9 +81,15 @@ export default function BookingModal() {
   // step offsets: multi → service=2, date=3, personal=4 | single → service=1, date=2, personal=3
   const S = isMultiStaff ? 1 : 0  // shift
 
-  // Listen for global open event
+  // Listen for global open event — reset form fully on each open
   useEffect(() => {
-    const handler = () => { setIsOpen(true); setStep(1) }
+    const handler = () => {
+      setIsOpen(true)
+      setStep(1)
+      setForm({ staffId: '', serviceId: '', date: '', time: '', name: '', phone: '', comment: '', consent: false })
+      setErrors({})
+      setBookedTimes([])
+    }
     window.addEventListener('open-booking-modal', handler)
     return () => window.removeEventListener('open-booking-modal', handler)
   }, [])
@@ -450,7 +456,7 @@ export default function BookingModal() {
                                     <button
                                       key={t}
                                       disabled={disabled}
-                                      onClick={() => !disabled && update('time', t)}
+                                      onClick={() => !disabled && update('time', form.time === t ? '' : t)}
                                       className={cn(
                                         'py-2 rounded-xl text-sm font-medium border transition-all duration-150',
                                         disabled
