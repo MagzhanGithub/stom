@@ -82,8 +82,8 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
       <div className="sticky top-0 z-20 bg-white border-b border-slate-200 flex w-full">
         {/* Single person icon in the time column area */}
         <div
-          className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white"
-          style={{ position: 'sticky', left: 0 }}
+          className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white border-r border-slate-200"
+          style={{ position: 'sticky', left: 0, zIndex: 10 }}
         >
           <User className="w-4 h-4 text-slate-300" />
         </div>
@@ -91,7 +91,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
         {displayStaff.map(member => (
           <div
             key={member.id}
-            className="flex-shrink-0 min-w-[calc(50vw-24px)] md:flex-1 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-slate-200 relative"
+            className="flex-shrink-0 min-w-[calc(50vw-24px)] md:flex-1 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-slate-200 relative overflow-hidden"
           >
             <p className="text-xs font-semibold text-slate-700">{member.name}</p>
             <p className="text-[10px] text-slate-400">{member.role}</p>
