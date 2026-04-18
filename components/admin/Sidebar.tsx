@@ -3,17 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Bell, ShoppingBag, CreditCard, List, Package,
+  Bell, ShoppingBag, CreditCard, List, UserPlus,
   ChevronDown, LogOut,
 } from 'lucide-react'
 import CalendarWidget from './CalendarWidget'
-
-const quickActions = [
-  { icon: ShoppingBag, label: 'Продажа товара' },
-  { icon: CreditCard,  label: 'Новый платеж'   },
-  { icon: List,        label: 'Список услуг'   },
-  { icon: Package,     label: 'Каталог товаров' },
-]
 
 interface Props {
   selectedDate: Date
@@ -21,9 +14,10 @@ interface Props {
   adminLogin: string
   hasNotification?: boolean
   onBellClick?: () => void
+  onAddStaff?: () => void
 }
 
-export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNotification, onBellClick }: Props) {
+export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNotification, onBellClick, onAddStaff }: Props) {
   const router = useRouter()
   const [favOpen, setFavOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -57,9 +51,15 @@ export default function Sidebar({ selectedDate, onDateChange, adminLogin, hasNot
 
       {/* Quick actions */}
       <div className="px-3 pb-3 grid grid-cols-2 gap-2 border-b border-white/10">
-        {quickActions.map(({ icon: Icon, label }) => (
+        {([
+          { icon: ShoppingBag, label: 'Продажа товара', onClick: undefined },
+          { icon: CreditCard,  label: 'Новый платеж',   onClick: undefined },
+          { icon: List,        label: 'Список услуг',   onClick: undefined },
+          { icon: UserPlus,    label: 'Добавить сотрудника', onClick: onAddStaff },
+        ] as const).map(({ icon: Icon, label, onClick }) => (
           <button
             key={label}
+            onClick={onClick}
             className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-white/5
                        hover:bg-white/10 transition-colors text-slate-300 hover:text-white"
           >

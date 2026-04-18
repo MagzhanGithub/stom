@@ -5,8 +5,15 @@ export interface StaffEntry {
   name: string
   role: string
   phone?: string
+  password?: string
   schedule?: { days: number[]; from: string; to: string }
   createdAt: number
+}
+
+function omitPassword(s: StaffEntry): Omit<StaffEntry, 'password'> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password: _pw, ...rest } = s
+  return rest
 }
 
 const memStaff: StaffEntry[] = [
@@ -19,13 +26,13 @@ const useSupabase = !!(
 )
 
 export async function GET() {
-  if (!useSupabase) return Response.json(memStaff)
+  if (!useSupabase) return Response.json(memStaff.map(omitPassword))
   const { data, error } = await getSupabase()
     .from('staff')
     .select('*')
     .order('createdAt', { ascending: true })
-  if (error) return Response.json(memStaff, { status: 500 })
-  return Response.json(data ?? [])
+  if (error) return Response.json(memStaff.map(omitPassword), { status: 500 })
+  return Response.json((data ?? []).map(omitPassword))
 }
 
 export async function DELETE(req: Request) {
@@ -47,17 +54,18 @@ export async function POST(req: Request) {
     name:      body.name     ?? '—',
     role:      body.role     ?? '—',
     phone:     body.phone    ?? '',
+    password:  body.password ?? '',
     schedule:  body.schedule ?? null,
     createdAt: Date.now(),
   }
   if (!useSupabase) {
     memStaff.push(entry)
-    return Response.json(entry, { status: 201 })
+    return Response.json(omitPassword(entry), { status: 201 })
   }
   const { error } = await getSupabase().from('staff').insert([entry])
   if (error) {
     memStaff.push(entry)
-    return Response.json(entry, { status: 201 })
+    return Response.json(omitPassword(entry), { status: 201 })
   }
-  return Response.json(entry, { status: 201 })
+  return Response.json(omitPassword(entry), { status: 201 })
 }

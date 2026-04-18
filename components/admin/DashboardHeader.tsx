@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, Filter, Search, Users, LayoutGrid } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter, Search, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const WEEKDAYS_RU  = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота']
@@ -116,9 +116,6 @@ export default function DashboardHeader({
         </button>
         <button className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
           <Search className="w-4 h-4" />
-        </button>
-        <button className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
-          <Users className="w-4 h-4" />
         </button>
         <button className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500">
           <LayoutGrid className="w-4 h-4" />

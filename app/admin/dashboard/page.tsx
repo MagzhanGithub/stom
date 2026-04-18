@@ -45,9 +45,10 @@ export default function AdminDashboardPage() {
   const [sidebarOpen,  setSidebarOpen]  = useState(true)
   const [isMobile,     setIsMobile]     = useState(false)
 
-  const [bookings,     setBookings]     = useState<BookingEntry[]>([])
-  const [staff,        setStaff]        = useState<StaffMember[]>([])
-  const [notification, setNotification] = useState<BookingEntry | null>(null)
+  const [bookings,      setBookings]      = useState<BookingEntry[]>([])
+  const [staff,         setStaff]         = useState<StaffMember[]>([])
+  const [myStaffId,     setMyStaffId]     = useState<string | null>(null)
+  const [notification,  setNotification]  = useState<BookingEntry | null>(null)
   const [showSearch,      setShowSearch]      = useState(false)
   const [showAddStaff,    setShowAddStaff]    = useState(false)
   const [deleteStaffItem, setDeleteStaffItem] = useState<StaffMember | null>(null)
@@ -85,6 +86,14 @@ export default function AdminDashboardPage() {
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Fetch current user role
+  useEffect(() => {
+    fetch('/api/me')
+      .then(r => r.json())
+      .then((d: { staffId: string | null }) => setMyStaffId(d.staffId ?? null))
+      .catch(() => {})
   }, [])
 
   // Initial staff fetch
@@ -131,6 +140,9 @@ export default function AdminDashboardPage() {
     setNotification(null)
   }
 
+  // Staff accounts only see their own column
+  const visibleStaff = myStaffId ? staff.filter(s => s.id === myStaffId) : staff
+
   const dateStr = toDateStr(selectedDate)
   const dayAppointments: Appointment[] = bookings
     .filter(b => b.status === 'confirmed' && b.date === dateStr)
@@ -152,7 +164,6 @@ export default function AdminDashboardPage() {
     { icon: ShoppingBag, label: 'Продажа',         onClick: () => {} },
     { icon: Filter,      label: 'Фильтры',         onClick: () => {} },
     { icon: Search,      label: 'Найти клиента',   onClick: () => setShowSearch(true) },
-    { icon: UserPlus,    label: 'Добавить',         onClick: () => setShowAddStaff(true) },
   ] as const
 
   return (
@@ -176,6 +187,7 @@ export default function AdminDashboardPage() {
           adminLogin={ADMIN_LOGIN}
           hasNotification={hasUnread}
           onBellClick={handleBellClick}
+          onAddStaff={() => setShowAddStaff(true)}
         />
       </div>
 
@@ -194,7 +206,7 @@ export default function AdminDashboardPage() {
 
         <div className="flex-1 overflow-hidden bg-white relative">
           <ScheduleGrid
-            staff={staff}
+            staff={visibleStaff}
             appointments={dayAppointments}
             selectedDate={selectedDate}
             onDeleteStaff={id => {

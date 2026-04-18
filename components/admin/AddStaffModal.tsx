@@ -15,6 +15,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
   const [name,     setName]     = useState('')
   const [role,     setRole]     = useState('')
   const [phone,    setPhone]    = useState('')
+  const [password, setPassword] = useState('')
   const [days,     setDays]     = useState<number[]>([0, 1, 2, 3, 4])
   const [timeFrom, setTimeFrom] = useState('09:00')
   const [timeTo,   setTimeTo]   = useState('18:00')
@@ -25,7 +26,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
   }
 
   async function submit() {
-    if (!name.trim() || !role.trim() || !phone.trim()) return
+    if (!name.trim() || !role.trim() || !phone.trim() || !password.trim()) return
     setLoading(true)
     await fetch('/api/staff', {
       method: 'POST',
@@ -34,6 +35,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
         name:     name.trim(),
         role:     role.trim(),
         phone:    phone.trim(),
+        password: password.trim(),
         schedule: { days, from: timeFrom, to: timeTo },
       }),
     }).catch(() => {})
@@ -95,6 +97,19 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
               />
             </div>
 
+            {/* Password */}
+            <div>
+              <label className="text-sm font-medium text-slate-600 mb-1.5 block">Пароль</label>
+              <input
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Пароль для входа в систему"
+                type="password"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm
+                           focus:outline-none focus:ring-2 focus:ring-slate-300"
+              />
+            </div>
+
             {/* Schedule — days */}
             <div>
               <label className="text-sm font-medium text-slate-600 mb-2 block">График работы</label>
@@ -144,7 +159,7 @@ export default function AddStaffModal({ onClose, onAdded }: Props) {
 
             <button
               onClick={submit}
-              disabled={loading || !name.trim() || !role.trim() || !phone.trim()}
+              disabled={loading || !name.trim() || !role.trim() || !phone.trim() || !password.trim()}
               className="w-full py-3 bg-[#1e1f2d] text-white font-semibold rounded-xl
                          disabled:opacity-40 transition-opacity mt-2"
             >
