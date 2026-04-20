@@ -27,6 +27,7 @@ interface Props {
   onDeleteStaff?: (id: string) => void
   isFullView?: boolean  // true = main admin (orphaned bookings go to first column)
   onAppointmentClick?: (id: string) => void
+  onSlotClick?: (staffId: string, hour: number, min: number) => void
 }
 
 const START_HOUR  = 9
@@ -60,7 +61,7 @@ function isSameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
 }
 
-export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff, isFullView = true, onAppointmentClick }: Props) {
+export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff, isFullView = true, onAppointmentClick, onSlotClick }: Props) {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
       <div className="sticky top-0 z-30 bg-white border-b border-slate-200 flex min-w-max">
         {/* Single person icon in the time column area */}
         <div
-          className="w-10 md:w-16 flex-shrink-0 flex items-center justify-center bg-white border-r border-slate-200"
+          className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white border-r border-slate-200"
           style={{ position: 'sticky', left: 0, zIndex: 20 }}
         >
           <User className="w-4 h-4 text-slate-300" />
@@ -94,7 +95,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
             key={member.id}
             className={cn(
               'flex-shrink-0 md:flex-1 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-r border-slate-200 relative overflow-hidden',
-              displayStaff.length === 1 ? 'min-w-[calc(100vw-3rem)]' : 'min-w-[calc(46vw-20px)]',
+              displayStaff.length === 1 ? 'min-w-[calc(100vw-3.5rem)]' : 'min-w-[calc(46vw-20px)]',
             )}
           >
             <p className="text-xs font-semibold text-slate-700">{member.name}</p>
@@ -124,7 +125,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
 
           {/* Left time column — sticky left */}
           <div
-            className="w-10 md:w-16 flex-shrink-0 bg-white border-r border-slate-200 relative"
+            className="w-12 md:w-16 flex-shrink-0 bg-white border-r border-slate-200 relative"
             style={{ position: 'sticky', left: 0, zIndex: 20 }}
           >
             {/* Current time pill — inside left column */}
@@ -174,9 +175,18 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
                 key={member.id}
                 className={cn(
                   'flex-shrink-0 md:flex-1 md:min-w-[320px] border-l border-r border-slate-200',
-                  displayStaff.length === 1 ? 'min-w-[calc(100vw-3rem)]' : 'min-w-[calc(46vw-20px)]',
+                  displayStaff.length === 1 ? 'min-w-[calc(100vw-3.5rem)]' : 'min-w-[calc(46vw-20px)]',
+                  onSlotClick && 'cursor-cell',
                 )}
                 style={{ position: 'relative', height: gridHeight }}
+                onClick={(e) => {
+                  if (!onSlotClick || member.id === '__empty__') return
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const relY = Math.max(0, e.clientY - rect.top)
+                  const slotIdx = Math.floor(relY / SLOT_H)
+                  const totalMin = BASE_MIN + slotIdx * SLOT_MIN
+                  onSlotClick(member.id, Math.floor(totalMin / 60), totalMin % 60)
+                }}
               >
                 {/* Grid lines */}
                 {Array.from({ length: TOTAL_SLOTS + 1 }).map((_, i) => (
@@ -210,7 +220,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
                   return (
                     <div
                       key={appt.id}
-                      onClick={() => onAppointmentClick?.(appt.id)}
+                      onClick={(e) => { e.stopPropagation(); onAppointmentClick?.(appt.id) }}
                       className={cn(
                         'absolute left-2 right-2 rounded-lg border px-2 py-0.5 cursor-pointer',
                         'flex items-center gap-1.5 overflow-hidden',

@@ -10,6 +10,7 @@ import SearchClientModal from '@/components/admin/SearchClientModal'
 import AddStaffModal from '@/components/admin/AddStaffModal'
 import DeleteStaffModal from '@/components/admin/DeleteStaffModal'
 import BookingDetailPanel from '@/components/admin/BookingDetailPanel'
+import AddAppointmentModal from '@/components/admin/AddAppointmentModal'
 import type { BookingEntry } from '@/app/api/bookings/route'
 
 const ADMIN_LOGIN = 'magzhan'
@@ -54,6 +55,7 @@ export default function AdminDashboardPage() {
   const [showAddStaff,    setShowAddStaff]    = useState(false)
   const [deleteStaffItem, setDeleteStaffItem] = useState<StaffMember | null>(null)
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null)
+  const [addAppt, setAddAppt] = useState<{ staffId: string; date: string; time: string } | null>(null)
   const shownIdsRef = useRef(new Set<string>())
 
   const hasUnread = bookings.some(b => b.status === 'new' || b.status === 'dismissed')
@@ -151,8 +153,31 @@ export default function AdminDashboardPage() {
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b))
   }
 
+  async function updateBooking(id: string, fields: Partial<BookingEntry>) {
+    await fetch('/api/bookings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...fields }),
+    }).catch(() => {})
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, ...fields } : b))
+  }
+
+  async function createAppointment(data: Omit<BookingEntry, 'id' | 'createdAt'>) {
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (res.ok) {
+        const entry: BookingEntry = await res.json()
+        setBookings(prev => [entry, ...prev])
+      }
+    } catch { /* ignore */ }
+  }
+
   const dayAppointments: Appointment[] = bookings
-    .filter(b => (b.status === 'confirmed' || b.status === 'completed') && b.date === dateStr)
+    .filter(b => ['confirmed', 'completed', 'cancelled'].includes(b.status) && b.date === dateStr)
     .map(b => {
       const [h, m] = b.time.split(':').map(Number)
       return {
@@ -222,7 +247,12 @@ export default function AdminDashboardPage() {
               const member = staff.find(s => s.id === id)
               if (member) setDeleteStaffItem(member)
             }}
-            onAppointmentClick={setSelectedBookingId}
+            onAppointmentClick={id => { setAddAppt(null); setSelectedBookingId(id) }}
+            onSlotClick={(staffId, hour, min) => {
+              setSelectedBookingId(null)
+              const time = `${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}`
+              setAddAppt({ staffId, date: dateStr, time })
+            }}
           />
 
           {/* Booking detail panel */}
@@ -235,9 +265,25 @@ export default function AdminDashboardPage() {
                 staff={staff}
                 onClose={() => setSelectedBookingId(null)}
                 onStatusChange={changeBookingStatus}
+                onUpdate={updateBooking}
               />
             )
           })()}
+
+          {/* Add appointment modal */}
+          {addAppt && (
+            <AddAppointmentModal
+              initialStaffId={addAppt.staffId}
+              initialDate={addAppt.date}
+              initialTime={addAppt.time}
+              staff={visibleStaff.length > 0 ? visibleStaff : staff}
+              onClose={() => setAddAppt(null)}
+              onSave={async (data) => {
+                await createAppointment(data)
+                setAddAppt(null)
+              }}
+            />
+          )}
 
           {/* Mobile floating Сегодня */}
           <button

@@ -11,6 +11,7 @@ export interface BookingEntry {
   staffId: string
   createdAt: number
   status: 'new' | 'dismissed' | 'confirmed' | 'completed' | 'cancelled'
+  durationMin?: number  // default 30
 }
 
 // Fallback in-memory store — used only when Supabase is not configured
@@ -34,16 +35,17 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json()
   const entry: BookingEntry = {
-    id:         crypto.randomUUID(),
-    clientName: body.clientName ?? '—',
-    phone:      body.phone      ?? '—',
-    service:    body.service    ?? '—',
-    serviceId:  body.serviceId  ?? '',
-    date:       body.date       ?? '',
-    time:       body.time       ?? '',
-    staffId:    body.staffId ?? '',
-    createdAt:  Date.now(),
-    status:     'new',
+    id:          crypto.randomUUID(),
+    clientName:  body.clientName  ?? '—',
+    phone:       body.phone       ?? '—',
+    service:     body.service     ?? '—',
+    serviceId:   body.serviceId   ?? '',
+    date:        body.date        ?? '',
+    time:        body.time        ?? '',
+    staffId:     body.staffId     ?? '',
+    createdAt:   Date.now(),
+    status:      body.status      ?? 'new',
+    durationMin: body.durationMin ?? 30,
   }
 
   if (!useSupabase) {
@@ -60,17 +62,17 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const { id, status } = await req.json() as { id: string; status: BookingEntry['status'] }
+  const { id, ...updates } = await req.json() as { id: string } & Partial<BookingEntry>
 
   if (!useSupabase) {
     const entry = memBookings.find(b => b.id === id)
-    if (entry) entry.status = status
+    if (entry) Object.assign(entry, updates)
     return Response.json({ ok: true })
   }
 
   const { error } = await getSupabase()
     .from('bookings')
-    .update({ status })
+    .update(updates)
     .eq('id', id)
   if (error) return Response.json({ error: error.message }, { status: 500 })
   return Response.json({ ok: true })

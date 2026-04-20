@@ -1,20 +1,34 @@
 'use client'
 
-import { X } from 'lucide-react'
+import { useState } from 'react'
+import { X, ChevronLeft, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BookingEntry } from '@/app/api/bookings/route'
 import type { StaffMember } from './ScheduleGrid'
 
 const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек']
 
+const TIME_OPTIONS: string[] = []
+for (let h = 9; h < 19; h++) {
+  TIME_OPTIONS.push(`${String(h).padStart(2, '0')}:00`)
+  TIME_OPTIONS.push(`${String(h).padStart(2, '0')}:30`)
+}
+
+const DURATION_OPTIONS = [
+  { value: 30,  label: '30 мин' },
+  { value: 60,  label: '1 час'  },
+  { value: 90,  label: '1.5 ч'  },
+  { value: 120, label: '2 часа' },
+]
+
 function fmtDate(iso: string) {
   const [, m, d] = iso.split('-').map(Number)
   return `${d} ${MONTHS[(m ?? 1) - 1]}`
 }
 
-function endTime(time: string) {
+function calcEnd(time: string, durationMin: number) {
   const [h, m] = time.split(':').map(Number)
-  const t = (h ?? 0) * 60 + (m ?? 0) + 30
+  const t = (h ?? 0) * 60 + (m ?? 0) + durationMin
   return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
 }
 
@@ -42,11 +56,33 @@ interface Props {
   staff: StaffMember[]
   onClose: () => void
   onStatusChange: (id: string, status: BookingEntry['status']) => void
+  onUpdate: (id: string, fields: Partial<BookingEntry>) => Promise<void>
 }
 
-export default function BookingDetailPanel({ booking, staff, onClose, onStatusChange }: Props) {
-  const member  = staff.find(s => s.id === booking.staffId)
-  const timeEnd = endTime(booking.time)
+export default function BookingDetailPanel({ booking, staff, onClose, onStatusChange, onUpdate }: Props) {
+  const dur = booking.durationMin ?? 30
+  const [isEditing, setIsEditing]   = useState(false)
+  const [saving,    setSaving]      = useState(false)
+  const [editForm,  setEditForm]    = useState({
+    staffId:     booking.staffId,
+    date:        booking.date,
+    time:        booking.time,
+    durationMin: dur,
+  })
+
+  function updateEdit<K extends keyof typeof editForm>(k: K, v: (typeof editForm)[K]) {
+    setEditForm(p => ({ ...p, [k]: v }))
+  }
+
+  async function saveEdit() {
+    setSaving(true)
+    await onUpdate(booking.id, editForm)
+    setSaving(false)
+    setIsEditing(false)
+  }
+
+  const member  = staff.find(s => s.id === (isEditing ? editForm.staffId : booking.staffId))
+  const timeEnd = calcEnd(isEditing ? editForm.time : booking.time, isEditing ? editForm.durationMin : dur)
   const waUrl   = `https://wa.me/${booking.phone.replace(/\D/g, '')}`
 
   return (
@@ -54,9 +90,6 @@ export default function BookingDetailPanel({ booking, staff, onClose, onStatusCh
       {/* Mobile backdrop */}
       <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      {/* Panel:
-          mobile  → fixed bottom sheet (slides up from bottom)
-          desktop → absolute right panel inside the relative grid container */}
       <div className={cn(
         'flex flex-col bg-white overflow-hidden',
         'fixed bottom-0 left-0 right-0 max-h-[82vh] rounded-t-2xl shadow-2xl z-50',
@@ -70,7 +103,15 @@ export default function BookingDetailPanel({ booking, staff, onClose, onStatusCh
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center justify-between px-3 py-3 border-b border-slate-100 flex-shrink-0">
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center
+                       text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label="Закрыть"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
           <h2 className="text-sm font-bold text-[#0d1a2b]">Запись</h2>
           <button
             onClick={onClose}
@@ -84,24 +125,102 @@ export default function BookingDetailPanel({ booking, staff, onClose, onStatusCh
 
         <div className="flex-1 overflow-y-auto">
 
-          {/* Staff + appointment info */}
+          {/* Staff + appointment info / Edit form */}
           <div className="px-5 py-4 border-b border-slate-100">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-slate-500">{initials(member?.name ?? '—')}</span>
+            {!isEditing ? (
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-slate-500">{initials(member?.name ?? '—')}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#0d1a2b] leading-tight">{member?.name ?? '—'}</p>
+                    <p className="text-xs text-slate-400">{member?.role ?? ''}</p>
+                  </div>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#0d1a2b] transition-colors flex-shrink-0"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    Изменить
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                  <span>📅 {fmtDate(booking.date)}</span>
+                  <span className="text-slate-300">·</span>
+                  <span className="font-semibold text-[#0d1a2b]">{booking.time}–{timeEnd}</span>
+                  <span className="text-slate-300">·</span>
+                  <span>{dur} мин</span>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-3">
+                {/* Staff select */}
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide block mb-1">
+                    Сотрудник
+                  </label>
+                  <select
+                    value={editForm.staffId}
+                    onChange={e => updateEdit('staffId', e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0d1a2b] bg-white focus:outline-none focus:border-[#0d1a2b]"
+                  >
+                    {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+                {/* Date */}
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide block mb-1">
+                    Дата
+                  </label>
+                  <input
+                    type="date"
+                    value={editForm.date}
+                    onChange={e => updateEdit('date', e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0d1a2b] bg-white focus:outline-none focus:border-[#0d1a2b]"
+                  />
+                </div>
+                {/* Time + Duration */}
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide block mb-1">
+                    Время и длительность
+                  </label>
+                  <div className="flex gap-2 items-center mb-2">
+                    <select
+                      value={editForm.time}
+                      onChange={e => updateEdit('time', e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0d1a2b] bg-white focus:outline-none focus:border-[#0d1a2b]"
+                    >
+                      {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <span className="text-xs text-slate-400 flex-shrink-0">→ {timeEnd}</span>
+                  </div>
+                  <select
+                    value={editForm.durationMin}
+                    onChange={e => updateEdit('durationMin', Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0d1a2b] bg-white focus:outline-none focus:border-[#0d1a2b]"
+                  >
+                    {DURATION_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                  </select>
+                </div>
+                {/* Save / Cancel */}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="flex-1 py-2 rounded-xl border border-slate-200 text-sm text-slate-500 hover:bg-slate-50 transition-colors"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    disabled={saving}
+                    className="flex-1 py-2 rounded-xl bg-[#0d1a2b] text-white text-sm font-semibold hover:bg-[#1a2e45] transition-colors disabled:opacity-60"
+                  >
+                    {saving ? '...' : 'Сохранить'}
+                  </button>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#0d1a2b] leading-tight">{member?.name ?? '—'}</p>
-                <p className="text-xs text-slate-400">{member?.role ?? ''}</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-              <span>📅 {fmtDate(booking.date)}</span>
-              <span className="text-slate-300">·</span>
-              <span className="font-semibold text-[#0d1a2b]">{booking.time}–{timeEnd}</span>
-              <span className="text-slate-300">·</span>
-              <span>30 мин</span>
-            </div>
+            )}
           </div>
 
           {/* Status */}
