@@ -98,9 +98,12 @@ The canonical dark color used throughout admin UI is `#0d1a2b` (equals `bg-navy`
 | ScheduleGrid sticky time columns | 20 |
 | ScheduleGrid sticky header row | 30 |
 | Backdrop | 30 |
+| BookingDetailPanel / AddAppointmentModal (desktop) | 40 |
 | Mobile nav drawer | 40 |
 | Mobile bottom bar | 50 |
 | Booking modal | 60 |
+
+The detail panels must be `md:z-40` (not z-20) so they paint above the ScheduleGrid sticky header (z-30) and prevent the staff-delete icon from bleeding through.
 
 ### Page structure
 
@@ -150,6 +153,8 @@ Multi-account JWT auth via `jose`. Two account tiers:
 - `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days. Syncs with header date nav via `useEffect` on `selectedDate` prop. Today style: `bg-white/20` circle when not selected, `bg-[#4ddde2] text-[#0d1a2b]` when selected+today.
 - `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. Shows red dot on toggle button when sidebar is closed and there are unread notifications. On mobile: abbreviated date ("16 апр"), filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
 - `ScheduleGrid.tsx` — time grid 09:00–19:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time: pill in left time column + `h-px` line across staff columns (both `#0d1a2b`). Left and right time columns use `position: sticky` with `zIndex: 20`; the sticky header row uses `z-30` (must be higher than time columns so "09:00" label doesn't bleed over the person icon when scrolled). Staff columns must NOT have `overflow-hidden` or `zIndex: 0` — those trigger Chrome compositing layer promotion that makes staff columns paint above the sticky header. A white bleed-cover `div` (`absolute inset-y-0 left-full w-2 bg-white`) inside the left time column masks rounded card corners at the boundary. Header `div` uses `min-w-max` so `border-b` extends to full content width (beyond viewport) when many staff columns exist. Both header row and grid row have a `w-2 flex-shrink-0 md:hidden` end-spacer so the last column's right border is visible on mobile. `isFullView` prop: when `true` (main admin), orphaned bookings (unknown `staffId`) go to the first column; when `false` (staff account) orphaned bookings are hidden.
+- `BookingDetailPanel.tsx` — right panel (desktop: `md:absolute right-0 top-0 bottom-0 w-[340px] z-40`) / bottom sheet (mobile: `fixed bottom-0 z-50`). Shows staff info, date/time, status buttons (Пришёл / Не пришёл only), service, client + WhatsApp link. "Изменить" (pencil icon) toggles an inline edit form for staff/date/time/duration. Time and duration `<option>` elements are disabled with `✗` when they would overlap an existing appointment for the same staff on the same day — conflict check uses `appointments` prop pre-filtered to exclude the current booking (`dayAppointments.filter(a => a.id !== b.id)`). "Удалить" (trash icon) requires a two-step confirm (click → shows "Отмена | Удалить?" pill). Desktop close `>` tab is rendered **inside** the panel itself at `absolute -left-9 top-14` — do NOT add external close buttons in `page.tsx`.
+- `AddAppointmentModal.tsx` — same `fixed/md:absolute` layout as BookingDetailPanel; opened by clicking an empty grid slot. Fields: staff, date, time, duration, service (from `lib/services`), client name, phone. Desktop `>` close tab also rendered inside the modal at `-left-9 top-14`. `z-40` on desktop.
 - `AddStaffModal.tsx` — bottom-sheet modal, inputs: Имя, Должность, Телефон, Пароль. `autoComplete="off"` on text fields, `autoComplete="new-password"` on password field (prevents browser autofill bleed). `POST /api/staff`.
 - `SearchClientModal.tsx` — bottom-sheet modal, filters `bookings` prop by clientName/phone in-memory (no API call).
 - `DeleteStaffModal.tsx` — confirmation modal before calling `DELETE /api/staff`.
@@ -176,7 +181,8 @@ create table bookings (
   time text not null,
   "staffId" text not null,
   "createdAt" bigint not null,
-  status text not null default 'new'
+  status text not null default 'new',
+  "durationMin" integer not null default 30
 );
 
 create table staff (
@@ -198,11 +204,12 @@ create table staff (
 
 `lib/supabase.ts` — lazy singleton `getSupabase()` (avoids build-time init error when env vars are absent).
 
-**Booking status flow:** `'new'` → `'dismissed'` (X button) or `'confirmed'` (Перейти к записи button)
+**Booking status flow:** `'new'` → `'dismissed'` (X button) or `'confirmed'` (Перейти к записи button) → `'completed'` / `'cancelled'` (via BookingDetailPanel status buttons)
 
 - `GET /api/bookings` — returns all bookings; returns **500** on Supabase error (never returns empty array, which would clear the dashboard)
-- `POST /api/bookings` — creates new booking (`BookingEntry`), status starts as `'new'`
-- `PATCH /api/bookings` — updates status by `id`
+- `POST /api/bookings` — creates new booking (`BookingEntry`), status starts as `'new'`; manually-added bookings use `status: 'confirmed'`
+- `PATCH /api/bookings` — updates any `BookingEntry` fields by `id` (status, time, date, staffId, durationMin)
+- `DELETE /api/bookings` — deletes a booking by `id`
 
 **Dashboard polling:** `useEffect` polls every 3s. `shownIdsRef` (`useRef<Set<string>>`) tracks which booking IDs have already triggered a popup this session (avoids re-showing without causing re-renders).
 
@@ -213,7 +220,7 @@ create table staff (
 - Position: `left: 228px` on desktop when sidebar open, else `left: 16px`
 - X: always visible on mobile, hover-only on desktop (`md:opacity-0 md:group-hover:opacity-100`)
 
-**Schedule grid** only shows `status === 'confirmed'` bookings. Unconfirmed bookings are invisible in the grid.
+**Schedule grid** shows `status === 'confirmed' | 'completed' | 'cancelled'` bookings. `confirmed` = blue, `completed` = green, `cancelled` = red. `new` / `dismissed` bookings are invisible in the grid. Card height = `(durationMin / 30) * 32 - 2` px; appointments must stretch proportionally when duration > 30 min. `durationMin` is mapped from `b.durationMin ?? 30` in `dayAppointments`.
 
 **Double-booking prevention:** `BookingModal` fetches `/api/bookings` on date change. With 1 staff, all confirmed slots for that date are disabled. With 2+ staff, only slots confirmed for the **selected staff** are disabled — other doctors remain bookable at the same time.
 
