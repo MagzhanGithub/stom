@@ -54,12 +54,9 @@ function tToMin(t: string) {
   return (h ?? 0) * 60 + (m ?? 0)
 }
 
-function wouldOverlap(
-  startMin: number, durMin: number,
-  appts: Appointment[], excludeId: string, staffId: string,
-) {
+function wouldOverlap(startMin: number, durMin: number, appts: Appointment[], staffId: string) {
   return appts.some(a => {
-    if (a.id === excludeId || a.staffId !== staffId) return false
+    if (a.staffId !== staffId) return false
     const aStart = a.startHour * 60 + a.startMin
     return startMin < aStart + a.durationMin && aStart < startMin + durMin
   })
@@ -163,39 +160,39 @@ export default function BookingDetailPanel({ booking, staff, appointments, onClo
                     <p className="text-sm font-semibold text-[#0d1a2b] leading-tight">{member?.name ?? '—'}</p>
                     <p className="text-xs text-slate-400">{member?.role ?? ''}</p>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#0d1a2b] transition-colors"
-                    >
-                      <Pencil className="w-3 h-3" />
-                      Изменить
-                    </button>
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
                     {!confirmDel ? (
-                      <button
-                        onClick={() => setConfirmDel(true)}
-                        className="flex items-center gap-1 text-xs text-slate-300 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        Удалить
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          title="Изменить"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#0d1a2b] hover:bg-slate-100 transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDel(true)}
+                          title="Удалить"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
                     ) : (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-2 py-1">
                         <button
                           onClick={() => setConfirmDel(false)}
-                          className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors"
+                          className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors leading-none"
                         >
                           Отмена
                         </button>
+                        <div className="w-px h-3 bg-red-200" />
                         <button
                           disabled={deleting}
-                          onClick={async () => {
-                            setDeleting(true)
-                            await onDelete(booking.id)
-                          }}
-                          className="text-[10px] text-red-500 hover:text-red-700 font-semibold transition-colors disabled:opacity-50"
+                          onClick={async () => { setDeleting(true); await onDelete(booking.id) }}
+                          className="text-[10px] text-red-500 hover:text-red-700 font-semibold transition-colors disabled:opacity-50 leading-none"
                         >
-                          {deleting ? '...' : 'Подтвердить'}
+                          {deleting ? '...' : 'Удалить?'}
                         </button>
                       </div>
                     )}
@@ -248,7 +245,7 @@ export default function BookingDetailPanel({ booking, staff, appointments, onClo
                       className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0d1a2b] bg-white focus:outline-none focus:border-[#0d1a2b]"
                     >
                       {TIME_OPTIONS.map(t => {
-                        const conflict = wouldOverlap(tToMin(t), editForm.durationMin, appointments, booking.id, editForm.staffId)
+                        const conflict = wouldOverlap(tToMin(t), editForm.durationMin, appointments, editForm.staffId)
                         return <option key={t} value={t} disabled={conflict}>{t}{conflict ? ' ✗' : ''}</option>
                       })}
                     </select>
@@ -260,7 +257,7 @@ export default function BookingDetailPanel({ booking, staff, appointments, onClo
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0d1a2b] bg-white focus:outline-none focus:border-[#0d1a2b]"
                   >
                     {DURATION_OPTIONS.map(d => {
-                      const conflict = wouldOverlap(tToMin(editForm.time), d.value, appointments, booking.id, editForm.staffId)
+                      const conflict = wouldOverlap(tToMin(editForm.time), d.value, appointments, editForm.staffId)
                       return <option key={d.value} value={d.value} disabled={conflict}>{d.label}{conflict ? ' ✗' : ''}</option>
                     })}
                   </select>
