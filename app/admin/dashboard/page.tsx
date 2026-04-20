@@ -9,6 +9,7 @@ import ScheduleGrid, { type Appointment, type StaffMember } from '@/components/a
 import SearchClientModal from '@/components/admin/SearchClientModal'
 import AddStaffModal from '@/components/admin/AddStaffModal'
 import DeleteStaffModal from '@/components/admin/DeleteStaffModal'
+import BookingDetailPanel from '@/components/admin/BookingDetailPanel'
 import type { BookingEntry } from '@/app/api/bookings/route'
 
 const ADMIN_LOGIN = 'magzhan'
@@ -52,6 +53,7 @@ export default function AdminDashboardPage() {
   const [showSearch,      setShowSearch]      = useState(false)
   const [showAddStaff,    setShowAddStaff]    = useState(false)
   const [deleteStaffItem, setDeleteStaffItem] = useState<StaffMember | null>(null)
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null)
   const shownIdsRef = useRef(new Set<string>())
 
   const hasUnread = bookings.some(b => b.status === 'new' || b.status === 'dismissed')
@@ -144,8 +146,13 @@ export default function AdminDashboardPage() {
   const visibleStaff = myStaffId ? staff.filter(s => s.id === myStaffId) : staff
 
   const dateStr = toDateStr(selectedDate)
+  async function changeBookingStatus(id: string, status: BookingEntry['status']) {
+    await patchBooking(id, status)
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b))
+  }
+
   const dayAppointments: Appointment[] = bookings
-    .filter(b => b.status === 'confirmed' && b.date === dateStr)
+    .filter(b => (b.status === 'confirmed' || b.status === 'completed') && b.date === dateStr)
     .map(b => {
       const [h, m] = b.time.split(':').map(Number)
       return {
@@ -154,7 +161,7 @@ export default function AdminDashboardPage() {
         startHour:   h!,
         startMin:    m!,
         durationMin: 30,
-        status:      'confirmed' as const,
+        status:      b.status as Appointment['status'],
         staffId:     b.staffId,
       }
     })
@@ -215,7 +222,22 @@ export default function AdminDashboardPage() {
               const member = staff.find(s => s.id === id)
               if (member) setDeleteStaffItem(member)
             }}
+            onAppointmentClick={setSelectedBookingId}
           />
+
+          {/* Booking detail panel */}
+          {selectedBookingId && (() => {
+            const b = bookings.find(x => x.id === selectedBookingId)
+            if (!b) return null
+            return (
+              <BookingDetailPanel
+                booking={b}
+                staff={staff}
+                onClose={() => setSelectedBookingId(null)}
+                onStatusChange={changeBookingStatus}
+              />
+            )
+          })()}
 
           {/* Mobile floating Сегодня */}
           <button

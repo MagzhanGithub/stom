@@ -13,6 +13,8 @@ const STATUS_LABEL: Record<BookingEntry['status'], string> = {
   new:       'Новая',
   dismissed: 'Отклонена',
   confirmed: 'Подтверждена',
+  completed: 'Завершена',
+  cancelled: 'Не пришёл',
 }
 
 export default function SearchClientModal({ bookings, onClose }: Props) {

@@ -26,6 +26,7 @@ interface Props {
   selectedDate?: Date
   onDeleteStaff?: (id: string) => void
   isFullView?: boolean  // true = main admin (orphaned bookings go to first column)
+  onAppointmentClick?: (id: string) => void
 }
 
 const START_HOUR  = 9
@@ -59,7 +60,7 @@ function isSameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
 }
 
-export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff, isFullView = true }: Props) {
+export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff, isFullView = true, onAppointmentClick }: Props) {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
       <div className="sticky top-0 z-30 bg-white border-b border-slate-200 flex min-w-max">
         {/* Single person icon in the time column area */}
         <div
-          className="w-12 md:w-16 flex-shrink-0 flex items-center justify-center bg-white border-r border-slate-200"
+          className="w-10 md:w-16 flex-shrink-0 flex items-center justify-center bg-white border-r border-slate-200"
           style={{ position: 'sticky', left: 0, zIndex: 20 }}
         >
           <User className="w-4 h-4 text-slate-300" />
@@ -91,7 +92,10 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
         {displayStaff.map(member => (
           <div
             key={member.id}
-            className="flex-shrink-0 min-w-[calc(46vw-20px)] md:flex-1 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-r border-slate-200 relative overflow-hidden"
+            className={cn(
+              'flex-shrink-0 md:flex-1 md:min-w-[320px] flex flex-col items-center py-2.5 gap-0.5 border-l border-r border-slate-200 relative overflow-hidden',
+              displayStaff.length === 1 ? 'min-w-[calc(100vw-3rem)]' : 'min-w-[calc(46vw-20px)]',
+            )}
           >
             <p className="text-xs font-semibold text-slate-700">{member.name}</p>
             <p className="text-[10px] text-slate-400">{member.role}</p>
@@ -120,7 +124,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
 
           {/* Left time column — sticky left */}
           <div
-            className="w-12 md:w-16 flex-shrink-0 bg-white border-r border-slate-200 relative"
+            className="w-10 md:w-16 flex-shrink-0 bg-white border-r border-slate-200 relative"
             style={{ position: 'sticky', left: 0, zIndex: 20 }}
           >
             {/* Current time pill — inside left column */}
@@ -168,7 +172,10 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
             return (
               <div
                 key={member.id}
-                className="flex-shrink-0 min-w-[calc(46vw-20px)] md:flex-1 md:min-w-[320px] border-l border-r border-slate-200"
+                className={cn(
+                  'flex-shrink-0 md:flex-1 md:min-w-[320px] border-l border-r border-slate-200',
+                  displayStaff.length === 1 ? 'min-w-[calc(100vw-3rem)]' : 'min-w-[calc(46vw-20px)]',
+                )}
                 style={{ position: 'relative', height: gridHeight }}
               >
                 {/* Grid lines */}
@@ -203,6 +210,7 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
                   return (
                     <div
                       key={appt.id}
+                      onClick={() => onAppointmentClick?.(appt.id)}
                       className={cn(
                         'absolute left-2 right-2 rounded-lg border px-2 py-0.5 cursor-pointer',
                         'flex items-center gap-1.5 overflow-hidden',

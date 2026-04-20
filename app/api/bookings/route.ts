@@ -10,7 +10,7 @@ export interface BookingEntry {
   time: string      // HH:MM
   staffId: string
   createdAt: number
-  status: 'new' | 'dismissed' | 'confirmed'
+  status: 'new' | 'dismissed' | 'confirmed' | 'completed' | 'cancelled'
 }
 
 // Fallback in-memory store — used only when Supabase is not configured
