@@ -77,3 +77,17 @@ export async function PATCH(req: Request) {
   if (error) return Response.json({ error: error.message }, { status: 500 })
   return Response.json({ ok: true })
 }
+
+export async function DELETE(req: Request) {
+  const { id } = await req.json() as { id: string }
+
+  if (!useSupabase) {
+    const idx = memBookings.findIndex(b => b.id === id)
+    if (idx !== -1) memBookings.splice(idx, 1)
+    return Response.json({ ok: true })
+  }
+
+  const { error } = await getSupabase().from('bookings').delete().eq('id', id)
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+  return Response.json({ ok: true })
+}

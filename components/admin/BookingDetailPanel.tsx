@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { X, ChevronLeft, Pencil } from 'lucide-react'
+import { X, ChevronLeft, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BookingEntry } from '@/app/api/bookings/route'
-import type { StaffMember } from './ScheduleGrid'
+import type { StaffMember, Appointment } from './ScheduleGrid'
 
 const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек']
 
@@ -49,6 +49,22 @@ const STATUS_OPTS: { key: BookingEntry['status']; label: string; active: string 
   { key: 'cancelled', label: 'Не пришёл', active: 'bg-red-50   border-red-400   text-red-800   font-semibold' },
 ]
 
+function tToMin(t: string) {
+  const [h, m] = t.split(':').map(Number)
+  return (h ?? 0) * 60 + (m ?? 0)
+}
+
+function wouldOverlap(
+  startMin: number, durMin: number,
+  appts: Appointment[], excludeId: string, staffId: string,
+) {
+  return appts.some(a => {
+    if (a.id === excludeId || a.staffId !== staffId) return false
+    const aStart = a.startHour * 60 + a.startMin
+    return startMin < aStart + a.durationMin && aStart < startMin + durMin
+  })
+}
+
 function fmtDuration(min: number) {
   const h = Math.floor(min / 60)
   const m = min % 60
@@ -60,15 +76,19 @@ function fmtDuration(min: number) {
 interface Props {
   booking: BookingEntry
   staff: StaffMember[]
+  appointments: Appointment[]
   onClose: () => void
   onStatusChange: (id: string, status: BookingEntry['status']) => void
   onUpdate: (id: string, fields: Partial<BookingEntry>) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }
 
-export default function BookingDetailPanel({ booking, staff, onClose, onStatusChange, onUpdate }: Props) {
+export default function BookingDetailPanel({ booking, staff, appointments, onClose, onStatusChange, onUpdate, onDelete }: Props) {
   const dur = booking.durationMin ?? 30
-  const [isEditing, setIsEditing]   = useState(false)
-  const [saving,    setSaving]      = useState(false)
+  const [isEditing,   setIsEditing]   = useState(false)
+  const [saving,      setSaving]      = useState(false)
+  const [deleting,    setDeleting]    = useState(false)
+  const [confirmDel,  setConfirmDel]  = useState(false)
   const [editForm,  setEditForm]    = useState({
     staffId:     booking.staffId,
     date:        booking.date,
@@ -143,13 +163,43 @@ export default function BookingDetailPanel({ booking, staff, onClose, onStatusCh
                     <p className="text-sm font-semibold text-[#0d1a2b] leading-tight">{member?.name ?? '—'}</p>
                     <p className="text-xs text-slate-400">{member?.role ?? ''}</p>
                   </div>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#0d1a2b] transition-colors flex-shrink-0"
-                  >
-                    <Pencil className="w-3 h-3" />
-                    Изменить
-                  </button>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#0d1a2b] transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      Изменить
+                    </button>
+                    {!confirmDel ? (
+                      <button
+                        onClick={() => setConfirmDel(true)}
+                        className="flex items-center gap-1 text-xs text-slate-300 hover:text-red-400 transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Удалить
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setConfirmDel(false)}
+                          className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          Отмена
+                        </button>
+                        <button
+                          disabled={deleting}
+                          onClick={async () => {
+                            setDeleting(true)
+                            await onDelete(booking.id)
+                          }}
+                          className="text-[10px] text-red-500 hover:text-red-700 font-semibold transition-colors disabled:opacity-50"
+                        >
+                          {deleting ? '...' : 'Подтвердить'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                   <span>📅 {fmtDate(booking.date)}</span>
@@ -197,7 +247,10 @@ export default function BookingDetailPanel({ booking, staff, onClose, onStatusCh
                       onChange={e => updateEdit('time', e.target.value)}
                       className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0d1a2b] bg-white focus:outline-none focus:border-[#0d1a2b]"
                     >
-                      {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                      {TIME_OPTIONS.map(t => {
+                        const conflict = wouldOverlap(tToMin(t), editForm.durationMin, appointments, booking.id, editForm.staffId)
+                        return <option key={t} value={t} disabled={conflict}>{t}{conflict ? ' ✗' : ''}</option>
+                      })}
                     </select>
                     <span className="text-xs text-slate-400 flex-shrink-0">→ {timeEnd}</span>
                   </div>
@@ -206,7 +259,10 @@ export default function BookingDetailPanel({ booking, staff, onClose, onStatusCh
                     onChange={e => updateEdit('durationMin', Number(e.target.value))}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0d1a2b] bg-white focus:outline-none focus:border-[#0d1a2b]"
                   >
-                    {DURATION_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                    {DURATION_OPTIONS.map(d => {
+                      const conflict = wouldOverlap(tToMin(editForm.time), d.value, appointments, booking.id, editForm.staffId)
+                      return <option key={d.value} value={d.value} disabled={conflict}>{d.label}{conflict ? ' ✗' : ''}</option>
+                    })}
                   </select>
                 </div>
                 {/* Save / Cancel */}

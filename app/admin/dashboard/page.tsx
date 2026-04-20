@@ -162,6 +162,16 @@ export default function AdminDashboardPage() {
     setBookings(prev => prev.map(b => b.id === id ? { ...b, ...fields } : b))
   }
 
+  async function deleteBooking(id: string) {
+    await fetch('/api/bookings', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }).catch(() => {})
+    setBookings(prev => prev.filter(b => b.id !== id))
+    setSelectedBookingId(null)
+  }
+
   async function createAppointment(data: Omit<BookingEntry, 'id' | 'createdAt'>) {
     try {
       const res = await fetch('/api/bookings', {
@@ -264,8 +274,8 @@ export default function AdminDashboardPage() {
               <>
                 <button
                   onClick={() => setSelectedBookingId(null)}
-                  className="hidden md:flex absolute top-3 z-30 items-center justify-center
-                             w-7 h-10 bg-white border border-slate-200 shadow-sm
+                  className="hidden md:flex absolute top-14 z-30 items-center justify-center
+                             w-9 h-10 bg-white border border-slate-200 shadow-sm
                              rounded-l-lg text-slate-400 hover:text-[#0d1a2b] transition-colors"
                   style={{ right: 340 }}
                   aria-label="Закрыть"
@@ -275,9 +285,11 @@ export default function AdminDashboardPage() {
                 <BookingDetailPanel
                   booking={b}
                   staff={staff}
+                  appointments={dayAppointments}
                   onClose={() => setSelectedBookingId(null)}
                   onStatusChange={changeBookingStatus}
                   onUpdate={updateBooking}
+                  onDelete={deleteBooking}
                 />
               </>
             )
@@ -288,8 +300,8 @@ export default function AdminDashboardPage() {
             <>
               <button
                 onClick={() => setAddAppt(null)}
-                className="hidden md:flex absolute top-3 z-30 items-center justify-center
-                           w-7 h-10 bg-white border border-slate-200 shadow-sm
+                className="hidden md:flex absolute top-14 z-30 items-center justify-center
+                           w-9 h-10 bg-white border border-slate-200 shadow-sm
                            rounded-l-lg text-slate-400 hover:text-[#0d1a2b] transition-colors"
                 style={{ right: 340 }}
                 aria-label="Закрыть"
