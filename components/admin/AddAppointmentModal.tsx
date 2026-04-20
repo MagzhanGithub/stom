@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, ChevronLeft } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { services } from '@/lib/services'
 import type { StaffMember } from './ScheduleGrid'
@@ -98,8 +98,19 @@ export default function AddAppointmentModal({
         'flex flex-col bg-white overflow-hidden',
         'fixed bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl shadow-2xl z-50',
         'md:absolute md:top-0 md:bottom-0 md:right-0 md:left-auto',
-        'md:w-[340px] md:max-h-none md:rounded-none md:shadow-xl md:border-l md:border-slate-200 md:z-20',
+        'md:w-[340px] md:max-h-none md:rounded-none md:shadow-xl md:border-l md:border-slate-200 md:z-40',
       )}>
+
+        {/* Desktop close tab */}
+        <button
+          onClick={onClose}
+          className="hidden md:flex absolute -left-9 top-14 items-center justify-center
+                     w-9 h-10 bg-white border border-slate-200 shadow-sm
+                     rounded-l-lg text-slate-400 hover:text-[#0d1a2b] transition-colors z-10"
+          aria-label="Закрыть"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
 
         <div className="md:hidden flex justify-center pt-3 pb-1 flex-shrink-0">
           <div className="w-10 h-1 rounded-full bg-slate-300" />

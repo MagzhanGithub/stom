@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, ChevronLeft, Pencil, Trash2 } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BookingEntry } from '@/app/api/bookings/route'
 import type { StaffMember, Appointment } from './ScheduleGrid'
@@ -117,8 +117,19 @@ export default function BookingDetailPanel({ booking, staff, appointments, onClo
         'flex flex-col bg-white overflow-hidden',
         'fixed bottom-0 left-0 right-0 max-h-[82vh] rounded-t-2xl shadow-2xl z-50',
         'md:absolute md:top-0 md:bottom-0 md:right-0 md:left-auto',
-        'md:w-[340px] md:max-h-none md:rounded-none md:shadow-xl md:border-l md:border-slate-200 md:z-20',
+        'md:w-[340px] md:max-h-none md:rounded-none md:shadow-xl md:border-l md:border-slate-200 md:z-40',
       )}>
+
+        {/* Desktop close tab — sticks out to the left of the panel */}
+        <button
+          onClick={onClose}
+          className="hidden md:flex absolute -left-9 top-14 items-center justify-center
+                     w-9 h-10 bg-white border border-slate-200 shadow-sm
+                     rounded-l-lg text-slate-400 hover:text-[#0d1a2b] transition-colors z-10"
+          aria-label="Закрыть"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
 
         {/* Drag handle (mobile only) */}
         <div className="md:hidden flex justify-center pt-3 pb-1 flex-shrink-0">

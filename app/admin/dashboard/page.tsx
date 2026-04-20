@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Search, ChevronRight } from 'lucide-react'
+import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Sidebar from '@/components/admin/Sidebar'
 import DashboardHeader from '@/components/admin/DashboardHeader'
@@ -266,23 +266,12 @@ export default function AdminDashboardPage() {
             }}
           />
 
-          {/* Booking detail panel + close tab */}
+          {/* Booking detail panel */}
           {selectedBookingId && (() => {
             const b = bookings.find(x => x.id === selectedBookingId)
             if (!b) return null
             return (
-              <>
-                <button
-                  onClick={() => setSelectedBookingId(null)}
-                  className="hidden md:flex absolute top-0 z-30 items-center justify-center
-                             w-9 h-11 bg-white border border-slate-200 shadow-sm
-                             rounded-l-lg text-slate-400 hover:text-[#0d1a2b] transition-colors"
-                  style={{ right: 340 }}
-                  aria-label="Закрыть"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-                <BookingDetailPanel
+              <BookingDetailPanel
                   booking={b}
                   staff={staff}
                   appointments={dayAppointments.filter(a => a.id !== b.id)}
@@ -291,35 +280,22 @@ export default function AdminDashboardPage() {
                   onUpdate={updateBooking}
                   onDelete={deleteBooking}
                 />
-              </>
             )
           })()}
 
-          {/* Add appointment modal + close tab */}
+          {/* Add appointment modal */}
           {addAppt && (
-            <>
-              <button
-                onClick={() => setAddAppt(null)}
-                className="hidden md:flex absolute top-14 z-30 items-center justify-center
-                           w-9 h-10 bg-white border border-slate-200 shadow-sm
-                           rounded-l-lg text-slate-400 hover:text-[#0d1a2b] transition-colors"
-                style={{ right: 340 }}
-                aria-label="Закрыть"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-              <AddAppointmentModal
-                initialStaffId={addAppt.staffId}
-                initialDate={addAppt.date}
-                initialTime={addAppt.time}
-                staff={visibleStaff.length > 0 ? visibleStaff : staff}
-                onClose={() => setAddAppt(null)}
-                onSave={async (data) => {
-                  await createAppointment(data)
-                  setAddAppt(null)
-                }}
-              />
-            </>
+            <AddAppointmentModal
+              initialStaffId={addAppt.staffId}
+              initialDate={addAppt.date}
+              initialTime={addAppt.time}
+              staff={visibleStaff.length > 0 ? visibleStaff : staff}
+              onClose={() => setAddAppt(null)}
+              onSave={async (data) => {
+                await createAppointment(data)
+                setAddAppt(null)
+              }}
+            />
           )}
 
           {/* Mobile floating Сегодня */}
