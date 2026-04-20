@@ -45,11 +45,17 @@ function WAIcon() {
 }
 
 const STATUS_OPTS: { key: BookingEntry['status']; label: string; active: string }[] = [
-  { key: 'new',       label: 'Ожидание',   active: 'bg-amber-50  border-amber-400 text-amber-800 font-semibold' },
-  { key: 'confirmed', label: 'Подтвердил', active: 'bg-blue-50   border-blue-400  text-blue-800  font-semibold' },
-  { key: 'completed', label: 'Пришёл',     active: 'bg-green-50  border-green-400 text-green-800 font-semibold' },
-  { key: 'cancelled', label: 'Не пришёл',  active: 'bg-red-50    border-red-400   text-red-800   font-semibold' },
+  { key: 'completed', label: 'Пришёл',    active: 'bg-green-50 border-green-400 text-green-800 font-semibold' },
+  { key: 'cancelled', label: 'Не пришёл', active: 'bg-red-50   border-red-400   text-red-800   font-semibold' },
 ]
+
+function fmtDuration(min: number) {
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  if (h === 0) return `${m} мин`
+  if (m === 0) return `${h} ч`
+  return `${h} ч ${m} мин`
+}
 
 interface Props {
   booking: BookingEntry
@@ -150,7 +156,7 @@ export default function BookingDetailPanel({ booking, staff, onClose, onStatusCh
                   <span className="text-slate-300">·</span>
                   <span className="font-semibold text-[#0d1a2b]">{booking.time}–{timeEnd}</span>
                   <span className="text-slate-300">·</span>
-                  <span>{dur} мин</span>
+                  <span>{fmtDuration(dur)}</span>
                 </div>
               </>
             ) : (

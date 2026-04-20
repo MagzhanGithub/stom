@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Search } from 'lucide-react'
+import { X, Smartphone, TrendingUp, ShoppingBag, Filter, Search, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Sidebar from '@/components/admin/Sidebar'
 import DashboardHeader from '@/components/admin/DashboardHeader'
@@ -185,7 +185,7 @@ export default function AdminDashboardPage() {
         clientName:  b.clientName,
         startHour:   h!,
         startMin:    m!,
-        durationMin: 30,
+        durationMin: b.durationMin ?? 30,
         status:      b.status as Appointment['status'],
         staffId:     b.staffId,
       }
@@ -247,6 +247,7 @@ export default function AdminDashboardPage() {
               const member = staff.find(s => s.id === id)
               if (member) setDeleteStaffItem(member)
             }}
+            selectedAppointmentId={selectedBookingId ?? undefined}
             onAppointmentClick={id => { setAddAppt(null); setSelectedBookingId(id) }}
             onSlotClick={(staffId, hour, min) => {
               setSelectedBookingId(null)
@@ -255,34 +256,58 @@ export default function AdminDashboardPage() {
             }}
           />
 
-          {/* Booking detail panel */}
+          {/* Booking detail panel + close tab */}
           {selectedBookingId && (() => {
             const b = bookings.find(x => x.id === selectedBookingId)
             if (!b) return null
             return (
-              <BookingDetailPanel
-                booking={b}
-                staff={staff}
-                onClose={() => setSelectedBookingId(null)}
-                onStatusChange={changeBookingStatus}
-                onUpdate={updateBooking}
-              />
+              <>
+                <button
+                  onClick={() => setSelectedBookingId(null)}
+                  className="hidden md:flex absolute top-3 z-30 items-center justify-center
+                             w-7 h-10 bg-white border border-slate-200 shadow-sm
+                             rounded-l-lg text-slate-400 hover:text-[#0d1a2b] transition-colors"
+                  style={{ right: 340 }}
+                  aria-label="Закрыть"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+                <BookingDetailPanel
+                  booking={b}
+                  staff={staff}
+                  onClose={() => setSelectedBookingId(null)}
+                  onStatusChange={changeBookingStatus}
+                  onUpdate={updateBooking}
+                />
+              </>
             )
           })()}
 
-          {/* Add appointment modal */}
+          {/* Add appointment modal + close tab */}
           {addAppt && (
-            <AddAppointmentModal
-              initialStaffId={addAppt.staffId}
-              initialDate={addAppt.date}
-              initialTime={addAppt.time}
-              staff={visibleStaff.length > 0 ? visibleStaff : staff}
-              onClose={() => setAddAppt(null)}
-              onSave={async (data) => {
-                await createAppointment(data)
-                setAddAppt(null)
-              }}
-            />
+            <>
+              <button
+                onClick={() => setAddAppt(null)}
+                className="hidden md:flex absolute top-3 z-30 items-center justify-center
+                           w-7 h-10 bg-white border border-slate-200 shadow-sm
+                           rounded-l-lg text-slate-400 hover:text-[#0d1a2b] transition-colors"
+                style={{ right: 340 }}
+                aria-label="Закрыть"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+              <AddAppointmentModal
+                initialStaffId={addAppt.staffId}
+                initialDate={addAppt.date}
+                initialTime={addAppt.time}
+                staff={visibleStaff.length > 0 ? visibleStaff : staff}
+                onClose={() => setAddAppt(null)}
+                onSave={async (data) => {
+                  await createAppointment(data)
+                  setAddAppt(null)
+                }}
+              />
+            </>
           )}
 
           {/* Mobile floating Сегодня */}

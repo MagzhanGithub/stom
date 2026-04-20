@@ -28,6 +28,7 @@ interface Props {
   isFullView?: boolean  // true = main admin (orphaned bookings go to first column)
   onAppointmentClick?: (id: string) => void
   onSlotClick?: (staffId: string, hour: number, min: number) => void
+  selectedAppointmentId?: string
 }
 
 const START_HOUR  = 9
@@ -38,7 +39,7 @@ const SLOT_H      = 32
 const STATUS_COLORS: Record<Appointment['status'], string> = {
   new:       'bg-violet-100 border-violet-300 text-violet-900',
   confirmed: 'bg-blue-400 border-blue-500 text-white',
-  completed: 'bg-slate-300 border-slate-400 text-slate-700',
+  completed: 'bg-green-400 border-green-500 text-white',
   cancelled: 'bg-red-300 border-red-400 text-red-900',
 }
 
@@ -61,7 +62,7 @@ function isSameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
 }
 
-export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff, isFullView = true, onAppointmentClick, onSlotClick }: Props) {
+export default function ScheduleGrid({ staff, appointments, selectedDate, onDeleteStaff, isFullView = true, onAppointmentClick, onSlotClick, selectedAppointmentId }: Props) {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -223,8 +224,9 @@ export default function ScheduleGrid({ staff, appointments, selectedDate, onDele
                       onClick={(e) => { e.stopPropagation(); onAppointmentClick?.(appt.id) }}
                       className={cn(
                         'absolute left-2 right-2 rounded-lg border px-2 py-0.5 cursor-pointer',
-                        'flex items-center gap-1.5 overflow-hidden',
+                        'flex items-center gap-1.5 overflow-hidden transition-opacity duration-150',
                         STATUS_COLORS[appt.status],
+                        selectedAppointmentId && appt.id !== selectedAppointmentId && 'opacity-30',
                       )}
                       style={{ top: topPx + 1, height: heightPx }}
                     >
