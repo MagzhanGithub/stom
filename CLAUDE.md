@@ -65,6 +65,8 @@ document.body.appendChild(a); a.click(); document.body.removeChild(a)
 
 `formatDate(iso)` in `BookingModal.tsx` converts `YYYY-MM-DD` → `DD.MM.YYYY` for display.
 
+**Phone input** in all booking forms (public `BookingModal` and admin `AddAppointmentModal`): initialized to `'+7'`, formatted live via `formatPhone()` to `+7 xxx xxx xx xx`, validated as exactly 11 digits. Never accept fewer or more digits.
+
 Date selection uses an inline calendar (not `<input type="date">`). Sundays are disabled. Saturdays only show slots up to 12:30. Past time slots are disabled when today is selected. Already-confirmed slots are fetched and disabled to prevent double-booking. `localDateStr(d)` builds `YYYY-MM-DD` from local timezone (never `toISOString()` which returns UTC and shows yesterday in UTC+5). `nextAvailableDate()` returns today or the next non-Sunday — used as the pre-selected date when a service is chosen. The calendar `selected` check is `!disabled && form.date === dateStr` to prevent disabled dates (Sundays) from appearing highlighted.
 
 ### Server vs Client components
@@ -153,10 +155,11 @@ Multi-account JWT auth via `jose`. Two account tiers:
 - `CalendarWidget.tsx` — interactive month calendar; only shows 6th row if it contains current-month days. Syncs with header date nav via `useEffect` on `selectedDate` prop. Today style: `bg-white/20` circle when not selected, `bg-[#4ddde2] text-[#0d1a2b]` when selected+today.
 - `DashboardHeader.tsx` — top bar with sidebar toggle (LayoutGrid icon), date navigation, День/Неделя. Shows red dot on toggle button when sidebar is closed and there are unread notifications. On mobile: abbreviated date ("16 апр"), filter/search icons hidden, "Сегодня" hidden (floating button shown instead).
 - `ScheduleGrid.tsx` — time grid 09:00–19:00, 30-min slots (32px each). Hour boundaries = full solid line; half-hour boundaries = full-width dashed line. Current time: pill in left time column + `h-px` line across staff columns (both `#0d1a2b`). Left and right time columns use `position: sticky` with `zIndex: 20`; the sticky header row uses `z-30` (must be higher than time columns so "09:00" label doesn't bleed over the person icon when scrolled). Staff columns must NOT have `overflow-hidden` or `zIndex: 0` — those trigger Chrome compositing layer promotion that makes staff columns paint above the sticky header. A white bleed-cover `div` (`absolute inset-y-0 left-full w-2 bg-white`) inside the left time column masks rounded card corners at the boundary. Header `div` uses `min-w-max` so `border-b` extends to full content width (beyond viewport) when many staff columns exist. Both header row and grid row have a `w-2 flex-shrink-0 md:hidden` end-spacer so the last column's right border is visible on mobile. `isFullView` prop: when `true` (main admin), orphaned bookings (unknown `staffId`) go to the first column; when `false` (staff account) orphaned bookings are hidden.
-- `BookingDetailPanel.tsx` — right panel (desktop: `md:absolute right-0 top-0 bottom-0 w-[340px] z-40`) / bottom sheet (mobile: `fixed bottom-0 z-50`). Shows staff info, date/time, status buttons (Пришёл / Не пришёл only), service, client + WhatsApp link. "Изменить" (pencil icon) toggles an inline edit form for staff/date/time/duration. Time and duration `<option>` elements are disabled with `✗` when they would overlap an existing appointment for the same staff on the same day — conflict check uses `appointments` prop pre-filtered to exclude the current booking (`dayAppointments.filter(a => a.id !== b.id)`). "Удалить" (trash icon) requires a two-step confirm (click → shows "Отмена | Удалить?" pill). Desktop close `>` tab is rendered **inside** the panel itself at `absolute -left-9 top-14` — do NOT add external close buttons in `page.tsx`.
-- `AddAppointmentModal.tsx` — same `fixed/md:absolute` layout as BookingDetailPanel; opened by clicking an empty grid slot. Fields: staff, date, time, duration, service (from `lib/services`), client name, phone. Desktop `>` close tab also rendered inside the modal at `-left-9 top-14`. `z-40` on desktop.
+- `BookingDetailPanel.tsx` — right panel (desktop: `md:absolute right-0 top-0 bottom-0 w-[340px] z-40`) / bottom sheet (mobile: `fixed bottom-0 z-50`). Status buttons: **Подтвердить** (confirmed/blue) · **Пришёл** (completed/green) · **Не пришёл** (cancelled/red) — 3 columns. "Изменить" (pencil icon) toggles an inline edit form for staff/date/time/duration. Time and duration `<option>` elements are disabled with `✗` when they would overlap an existing appointment for the same staff on the same day — conflict check uses `appointments` prop pre-filtered to exclude the current booking (`dayAppointments.filter(a => a.id !== b.id)`). "Удалить" (trash icon) requires a two-step confirm (click → shows "Отмена | Удалить?" pill). **Payment overlay** (`showPayment` state): absolute overlay inside the panel at `z-20`; shows service price from `lib/services` by `booking.serviceId`, cash/card selection, "Оплатить N ₸" button → calls `onStatusChange(id, 'completed')`. Desktop close `>` tab is rendered **inside** the panel itself at `absolute -left-9 top-14` — do NOT add external close buttons in `page.tsx`.
+- `AddAppointmentModal.tsx` — same `fixed/md:absolute` layout as BookingDetailPanel; opened by clicking an empty grid slot. Service select uses `catId::itemIndex` format — e.g. `"implants::2"` to select a specific price item within a category; the save handler splits on `::` to resolve the service name and price. Phone field uses `+7 xxx xxx xx xx` mask (exactly 11 digits enforced). Desktop `>` close tab also rendered inside the modal at `-left-9 top-14`. `z-40` on desktop.
 - `AddStaffModal.tsx` — bottom-sheet modal, inputs: Имя, Должность, Телефон, Пароль. `autoComplete="off"` on text fields, `autoComplete="new-password"` on password field (prevents browser autofill bleed). `POST /api/staff`.
-- `SearchClientModal.tsx` — bottom-sheet modal, filters `bookings` prop by clientName/phone in-memory (no API call).
+- `SearchClientModal.tsx` — bottom-sheet modal. Fetches `/api/clients?q=query` with 300 ms debounce; shows matching clients with their visit history (from the `bookings` prop filtered by phone).
+- `ServicesListModal.tsx` — full-screen modal showing all service categories from `lib/services` with search and collapsible categories. Opened via `onServices` prop on Sidebar (`showServices` state in `page.tsx`). Uses `z-[60]` (inline, not Tailwind class) to layer above the admin panel.
 - `DeleteStaffModal.tsx` — confirmation modal before calling `DELETE /api/staff`.
 
 **Mobile sidebar toggle:** `isMobile` state (from `useEffect` + resize listener) controls whether sidebar is a flex item (desktop) or a fixed overlay (mobile).
@@ -194,6 +197,13 @@ create table staff (
   schedule jsonb,
   "createdAt" bigint not null
 );
+
+create table clients (
+  id text primary key,
+  name text not null,
+  phone text not null unique,
+  "createdAt" bigint not null
+);
 ```
 
 **Required env vars** (Vercel + `.env.local`):
@@ -204,19 +214,25 @@ create table staff (
 
 `lib/supabase.ts` — lazy singleton `getSupabase()` (avoids build-time init error when env vars are absent).
 
-**Booking status flow:** `'new'` → `'dismissed'` (X button) or `'confirmed'` (Перейти к записи button) → `'completed'` / `'cancelled'` (via BookingDetailPanel status buttons)
+**Booking status flow:** `'new'` → `'dismissed'` (X button) or `'confirmed'` ("Подтвердить" button in notification popup) → `'confirmed'` / `'completed'` / `'cancelled'` (via BookingDetailPanel status buttons). The payment overlay in BookingDetailPanel sets `'completed'` after selecting a payment method.
 
 - `GET /api/bookings` — returns all bookings; returns **500** on Supabase error (never returns empty array, which would clear the dashboard)
-- `POST /api/bookings` — creates new booking (`BookingEntry`), status starts as `'new'`; manually-added bookings use `status: 'confirmed'`
+- `POST /api/bookings` — creates new booking (`BookingEntry`), status starts as `'new'`; manually-added bookings use `status: 'confirmed'`. Also upserts the client record into the `clients` table (by phone) after successful insert.
 - `PATCH /api/bookings` — updates any `BookingEntry` fields by `id` (status, time, date, staffId, durationMin)
 - `DELETE /api/bookings` — deletes a booking by `id`
+
+**Client database** (`app/api/clients/route.ts`):
+- `GET /api/clients?q=query` — searches clients by name or phone (`ilike` in Supabase, in-memory filter in fallback)
+- `POST /api/clients` — upserts client by phone (updates name if phone exists, inserts otherwise)
+- Clients are auto-saved on every `POST /api/bookings` — no manual call needed
+- `SearchClientModal` queries this endpoint with 300 ms debounce and shows visit history from the `bookings` prop
 
 **Dashboard polling:** `useEffect` polls every 3s. `shownIdsRef` (`useRef<Set<string>>`) tracks which booking IDs have already triggered a popup this session (avoids re-showing without causing re-renders).
 
 **Notification popup** (`page.tsx`):
 - Shows for `status === 'new'` bookings not yet in `shownIdsRef`
 - X button → PATCH to `'dismissed'`; red dot on bell stays until confirmed
-- "Перейти к записи" → PATCH to `'confirmed'`; navigates to booking date
+- **"Подтвердить"** button → PATCH to `'confirmed'`; navigates to booking date
 - Position: `left: 228px` on desktop when sidebar open, else `left: 16px`
 - X: always visible on mobile, hover-only on desktop (`md:opacity-0 md:group-hover:opacity-100`)
 
