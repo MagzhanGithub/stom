@@ -58,6 +58,24 @@ export async function POST(req: Request) {
     memBookings.push(entry)
     return Response.json(entry, { status: 201 })
   }
+
+  // Upsert client record
+  const phone = (body.phone ?? '').replace(/\s/g, '')
+  if (phone && body.clientName) {
+    const sb = getSupabase()
+    const { data: existing } = await sb.from('clients').select('id').eq('phone', phone).maybeSingle()
+    if (existing) {
+      await sb.from('clients').update({ name: body.clientName }).eq('phone', phone)
+    } else {
+      await sb.from('clients').insert([{
+        id: crypto.randomUUID(),
+        name: body.clientName,
+        phone,
+        createdAt: Date.now(),
+      }])
+    }
+  }
+
   return Response.json(entry, { status: 201 })
 }
 

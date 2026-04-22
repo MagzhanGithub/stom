@@ -362,7 +362,7 @@ export default function AdminDashboardPage() {
             className="w-full py-2 bg-yellow-400 hover:bg-yellow-300 text-[#0d1a2b]
                        text-sm font-bold rounded-xl transition-colors"
           >
-            Перейти к записи
+            Подтвердить
           </button>
         </div>
       )}

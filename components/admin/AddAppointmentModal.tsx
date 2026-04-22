@@ -19,6 +19,18 @@ const DURATION_OPTIONS = [
   { value: 120, label: '2 часа' },
 ]
 
+function formatPhone(input: string): string {
+  const digits = input.replace(/\D/g, '')
+  const local = digits.startsWith('7') ? digits.slice(1) : digits
+  const d = local.slice(0, 10)
+  let result = '+7'
+  if (d.length > 0) result += ' ' + d.slice(0, 3)
+  if (d.length > 3) result += ' ' + d.slice(3, 6)
+  if (d.length > 6) result += ' ' + d.slice(6, 8)
+  if (d.length > 8) result += ' ' + d.slice(8, 10)
+  return result
+}
+
 function calcEnd(time: string, durationMin: number) {
   const [h, m] = time.split(':').map(Number)
   const t = (h ?? 0) * 60 + (m ?? 0) + durationMin
@@ -56,7 +68,7 @@ export default function AddAppointmentModal({
     durationMin: 30,
     serviceId:   '',
     clientName:  '',
-    phone:       '',
+    phone:       '+7',
   })
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
@@ -70,7 +82,8 @@ export default function AddAppointmentModal({
     const e: typeof errors = {}
     if (!form.serviceId)  e.serviceId  = 'Выберите услугу'
     if (!form.clientName) e.clientName = 'Введите имя'
-    if (!form.phone)      e.phone      = 'Введите телефон'
+    if (!form.phone || form.phone === '+7') e.phone = 'Введите телефон'
+    else if (form.phone.replace(/\D/g, '').length !== 11) e.phone = 'Формат: +7 xxx xxx xx xx'
     setErrors(e)
     if (Object.keys(e).length > 0) return
 
@@ -230,8 +243,8 @@ export default function AddAppointmentModal({
             <input
               type="tel"
               value={form.phone}
-              onChange={e => upd('phone', e.target.value)}
-              placeholder="+7 700 000-00-00"
+              onChange={e => upd('phone', formatPhone(e.target.value))}
+              placeholder="+7 xxx xxx xx xx"
               className={cn(
                 'w-full px-3 py-2.5 rounded-xl border text-sm text-[#0d1a2b] placeholder:text-slate-300 bg-white focus:outline-none focus:border-[#0d1a2b]',
                 errors.phone ? 'border-red-400' : 'border-slate-200',

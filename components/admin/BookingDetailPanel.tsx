@@ -45,8 +45,9 @@ function WAIcon() {
 }
 
 const STATUS_OPTS: { key: BookingEntry['status']; label: string; active: string }[] = [
-  { key: 'completed', label: 'Пришёл',    active: 'bg-green-50 border-green-400 text-green-800 font-semibold' },
-  { key: 'cancelled', label: 'Не пришёл', active: 'bg-red-50   border-red-400   text-red-800   font-semibold' },
+  { key: 'confirmed', label: 'Подтвердить', active: 'bg-blue-50  border-blue-400  text-blue-800  font-semibold' },
+  { key: 'completed', label: 'Пришёл',      active: 'bg-green-50 border-green-400 text-green-800 font-semibold' },
+  { key: 'cancelled', label: 'Не пришёл',   active: 'bg-red-50   border-red-400   text-red-800   font-semibold' },
 ]
 
 function tToMin(t: string) {
@@ -296,7 +297,7 @@ export default function BookingDetailPanel({ booking, staff, appointments, onClo
           {/* Status */}
           <div className="px-5 py-4 border-b border-slate-100">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Статус</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {STATUS_OPTS.map(opt => (
                 <button
                   key={opt.key}

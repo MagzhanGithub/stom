@@ -59,6 +59,18 @@ function localDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
+function formatPhone(input: string): string {
+  const digits = input.replace(/\D/g, '')
+  const local = digits.startsWith('7') ? digits.slice(1) : digits
+  const d = local.slice(0, 10)
+  let result = '+7'
+  if (d.length > 0) result += ' ' + d.slice(0, 3)
+  if (d.length > 3) result += ' ' + d.slice(3, 6)
+  if (d.length > 6) result += ' ' + d.slice(6, 8)
+  if (d.length > 8) result += ' ' + d.slice(8, 10)
+  return result
+}
+
 // Skip Sundays — clinic is closed
 function nextAvailableDate(): string {
   const d = new Date()
@@ -93,7 +105,7 @@ export default function BookingModal() {
     const handler = () => {
       setIsOpen(true)
       setStep(1)
-      setForm({ staffId: '', serviceId: '', date: '', time: '', name: '', phone: '', comment: '', consent: false })
+      setForm({ staffId: '', serviceId: '', date: '', time: '', name: '', phone: '+7', comment: '', consent: false })
       setErrors({})
       setBookedTimes([])
     }
@@ -154,8 +166,8 @@ export default function BookingModal() {
   function validateStep3(): boolean {
     const e: typeof errors = {}
     if (!form.name.trim()) e.name = 'Введите ваше имя'
-    if (!form.phone.trim()) e.phone = 'Введите номер телефона'
-    else if (!/^\+?[0-9\s\-()]{10,15}$/.test(form.phone)) e.phone = 'Введите корректный номер'
+    if (!form.phone.trim() || form.phone === '+7') e.phone = 'Введите номер телефона'
+    else if (form.phone.replace(/\D/g, '').length !== 11) e.phone = 'Введите номер в формате +7 xxx xxx xx xx'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -524,8 +536,8 @@ export default function BookingModal() {
                     autoComplete="tel"
                     inputMode="tel"
                     value={form.phone}
-                    onChange={e => update('phone', e.target.value)}
-                    placeholder="+7 700 123-45-67"
+                    onChange={e => update('phone', formatPhone(e.target.value))}
+                    placeholder="+7 xxx xxx xx xx"
                     className={cn(
                       'w-full px-4 py-3 rounded-xl border text-body placeholder:text-text-muted',
                       'focus:outline-none focus:ring-2 transition-colors duration-150',
