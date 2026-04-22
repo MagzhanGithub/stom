@@ -88,19 +88,31 @@ export default function AddAppointmentModal({
     if (Object.keys(e).length > 0) return
 
     setSaving(true)
-    const svc = services.find(s => s.id === form.serviceId)
+    // serviceId format: "catId::itemIndex" or just "catId"
+    const [catId, itemIdxStr] = form.serviceId.split('::')
+    const cat = services.find(s => s.id === catId)
+    const itemIdx = itemIdxStr !== undefined ? Number(itemIdxStr) : -1
+    const item = itemIdx >= 0 ? cat?.items?.[itemIdx] : undefined
+    const serviceName = item?.name ?? cat?.title ?? '—'
+
     await onSave({
       staffId:     form.staffId,
       date:        form.date,
       time:        form.time,
       durationMin: form.durationMin,
-      service:     svc?.title ?? '—',
-      serviceId:   form.serviceId,
+      service:     serviceName,
+      serviceId:   catId ?? form.serviceId,
       clientName:  form.clientName,
       phone:       form.phone,
       status:      'confirmed',
     })
     setSaving(false)
+  }
+
+  function fmtItemPrice(min: number, max?: number) {
+    if (min === 0) return 'Бесплатно'
+    const f = (n: number) => n.toLocaleString('ru-RU')
+    return max ? `${f(min)}–${f(max)} ₸` : `от ${f(min)} ₸`
   }
 
   return (
@@ -212,7 +224,15 @@ export default function AddAppointmentModal({
               )}
             >
               <option value="">Выберите услугу...</option>
-              {services.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+              {services.map(cat => (
+                <optgroup key={cat.id} label={cat.title}>
+                  {(cat.items ?? []).map((item, i) => (
+                    <option key={i} value={`${cat.id}::${i}`}>
+                      {item.name} — {fmtItemPrice(item.priceFrom, item.priceTo)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
             {errors.serviceId && <p className="mt-1 text-xs text-red-500">{errors.serviceId}</p>}
           </div>

@@ -133,19 +133,28 @@ export default function BookingModal() {
     if (!form.date) return
     fetch('/api/bookings')
       .then(r => r.json())
-      .then((data: { date: string; time: string; status: string; staffId: string }[]) => {
+      .then((data: { date: string; time: string; status: string; staffId: string; durationMin?: number }[]) => {
         const staffIds = new Set(staffList.map(s => s.id))
         const isFirstStaff = !isMultiStaff || form.staffId === staffList[0]?.id
-        setBookedTimes(
-          data.filter(b =>
-            b.date === form.date &&
-            b.status === 'confirmed' &&
-            (!isMultiStaff
-              ? true
-              : b.staffId === form.staffId || (!staffIds.has(b.staffId) && isFirstStaff)
-            )
-          ).map(b => b.time)
+        const filtered = data.filter(b =>
+          b.date === form.date &&
+          b.status === 'confirmed' &&
+          (!isMultiStaff
+            ? true
+            : b.staffId === form.staffId || (!staffIds.has(b.staffId) && isFirstStaff)
+          )
         )
+        // Expand each booking into all 30-min slots it occupies
+        const allBlocked: string[] = []
+        for (const b of filtered) {
+          const [h, m] = b.time.split(':').map(Number)
+          const start = (h ?? 0) * 60 + (m ?? 0)
+          const dur = b.durationMin ?? 30
+          for (let t = start; t < start + dur; t += 30) {
+            allBlocked.push(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`)
+          }
+        }
+        setBookedTimes(allBlocked)
       })
       .catch(() => {})
   }, [form.date, form.staffId, isMultiStaff, staffList])

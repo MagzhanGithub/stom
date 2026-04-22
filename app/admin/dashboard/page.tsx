@@ -11,6 +11,7 @@ import AddStaffModal from '@/components/admin/AddStaffModal'
 import DeleteStaffModal from '@/components/admin/DeleteStaffModal'
 import BookingDetailPanel from '@/components/admin/BookingDetailPanel'
 import AddAppointmentModal from '@/components/admin/AddAppointmentModal'
+import ServicesListModal from '@/components/admin/ServicesListModal'
 import type { BookingEntry } from '@/app/api/bookings/route'
 
 const ADMIN_LOGIN = 'magzhan'
@@ -53,6 +54,7 @@ export default function AdminDashboardPage() {
   const [notification,  setNotification]  = useState<BookingEntry | null>(null)
   const [showSearch,      setShowSearch]      = useState(false)
   const [showAddStaff,    setShowAddStaff]    = useState(false)
+  const [showServices,    setShowServices]    = useState(false)
   const [deleteStaffItem, setDeleteStaffItem] = useState<StaffMember | null>(null)
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null)
   const [addAppt, setAddAppt] = useState<{ staffId: string; date: string; time: string } | null>(null)
@@ -230,6 +232,8 @@ export default function AdminDashboardPage() {
           hasNotification={hasUnread}
           onBellClick={handleBellClick}
           onAddStaff={() => setShowAddStaff(true)}
+          onServices={() => setShowServices(true)}
+          onSearch={() => setShowSearch(true)}
           isAdmin={!myStaffId}
         />
       </div>
@@ -365,6 +369,11 @@ export default function AdminDashboardPage() {
             Подтвердить
           </button>
         </div>
+      )}
+
+      {/* Services list modal */}
+      {showServices && (
+        <ServicesListModal onClose={() => setShowServices(false)} />
       )}
 
       {/* Search client modal */}

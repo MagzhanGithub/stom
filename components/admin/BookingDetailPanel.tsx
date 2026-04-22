@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Pencil, Trash2, Banknote, CreditCard, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BookingEntry } from '@/app/api/bookings/route'
 import type { StaffMember, Appointment } from './ScheduleGrid'
+import { services } from '@/lib/services'
 
 const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек']
 
@@ -81,18 +82,26 @@ interface Props {
   onDelete: (id: string) => Promise<void>
 }
 
+function fmtPayPrice(n: number) {
+  return n.toLocaleString('ru-RU')
+}
+
 export default function BookingDetailPanel({ booking, staff, appointments, onClose, onStatusChange, onUpdate, onDelete }: Props) {
   const dur = booking.durationMin ?? 30
   const [isEditing,   setIsEditing]   = useState(false)
   const [saving,      setSaving]      = useState(false)
   const [deleting,    setDeleting]    = useState(false)
   const [confirmDel,  setConfirmDel]  = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
+  const [payMethod,   setPayMethod]   = useState<'cash' | 'card' | null>(null)
   const [editForm,  setEditForm]    = useState({
     staffId:     booking.staffId,
     date:        booking.date,
     time:        booking.time,
     durationMin: dur,
   })
+
+  const servicePrice = services.find(s => s.id === booking.serviceId)?.priceFrom ?? 0
 
   function updateEdit<K extends keyof typeof editForm>(k: K, v: (typeof editForm)[K]) {
     setEditForm(p => ({ ...p, [k]: v }))
@@ -157,6 +166,112 @@ export default function BookingDetailPanel({ booking, staff, appointments, onClo
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Payment overlay */}
+        {showPayment && (
+          <div className="absolute inset-0 bg-white flex flex-col z-20 overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 flex-shrink-0">
+              <button
+                onClick={() => setShowPayment(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-2 flex-1">
+                <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-base">💳</div>
+                <h3 className="text-sm font-bold text-[#0d1a2b]">Оплата визита</h3>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 p-5 space-y-4">
+              {/* Order summary */}
+              <div className="bg-slate-50 rounded-2xl p-4">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Общий счёт</p>
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-base">🦷</span>
+                    <span className="text-sm text-[#0d1a2b] truncate">{booking.service}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-[#0d1a2b] flex-shrink-0 ml-2">
+                    {servicePrice > 0 ? `${fmtPayPrice(servicePrice)} ₸` : 'По договору'}
+                  </span>
+                </div>
+                <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                  <span className="text-xs font-semibold text-slate-500">К оплате</span>
+                  <span className="text-xl font-bold text-[#0d1a2b]">
+                    {servicePrice > 0 ? `${fmtPayPrice(servicePrice)} ₸` : '—'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Payment method */}
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Способ оплаты</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setPayMethod('cash')}
+                    className={cn(
+                      'flex flex-col items-center gap-2.5 py-5 px-3 rounded-2xl border-2 transition-all duration-150',
+                      payMethod === 'cash'
+                        ? 'border-[#0d1a2b] bg-[#0d1a2b]/5'
+                        : 'border-slate-200 hover:border-slate-300 bg-white',
+                    )}
+                  >
+                    <Banknote className={cn('w-7 h-7 transition-colors', payMethod === 'cash' ? 'text-[#0d1a2b]' : 'text-slate-400')} />
+                    <div className="text-center">
+                      <p className={cn('text-xs font-semibold', payMethod === 'cash' ? 'text-[#0d1a2b]' : 'text-slate-600')}>Наличные</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Основная касса</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setPayMethod('card')}
+                    className={cn(
+                      'flex flex-col items-center gap-2.5 py-5 px-3 rounded-2xl border-2 transition-all duration-150',
+                      payMethod === 'card'
+                        ? 'border-[#0d1a2b] bg-[#0d1a2b]/5'
+                        : 'border-slate-200 hover:border-slate-300 bg-white',
+                    )}
+                  >
+                    <CreditCard className={cn('w-7 h-7 transition-colors', payMethod === 'card' ? 'text-[#0d1a2b]' : 'text-slate-400')} />
+                    <div className="text-center">
+                      <p className={cn('text-xs font-semibold', payMethod === 'card' ? 'text-[#0d1a2b]' : 'text-slate-600')}>Карта</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Банковский счёт</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Confirm button */}
+            <div className="px-5 py-4 border-t border-slate-100 flex-shrink-0">
+              <button
+                disabled={!payMethod}
+                onClick={() => {
+                  onStatusChange(booking.id, 'completed')
+                  setShowPayment(false)
+                }}
+                className={cn(
+                  'w-full py-3 rounded-xl text-sm font-bold transition-all duration-150',
+                  payMethod
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-200'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed',
+                )}
+              >
+                {payMethod
+                  ? `Оплатить${servicePrice > 0 ? ` ${fmtPayPrice(servicePrice)} ₸` : ''}`
+                  : 'Выберите способ оплаты'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto">
 
@@ -297,21 +412,42 @@ export default function BookingDetailPanel({ booking, staff, appointments, onClo
           {/* Status */}
           <div className="px-5 py-4 border-b border-slate-100">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Статус</p>
-            <div className="grid grid-cols-3 gap-2">
-              {STATUS_OPTS.map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => onStatusChange(booking.id, opt.key)}
-                  className={cn(
-                    'px-3 py-2 rounded-xl border text-xs transition-all duration-150 text-left',
-                    booking.status === opt.key
-                      ? opt.active
-                      : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50',
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
+            {/* Confirm — full width */}
+            <button
+              onClick={() => onStatusChange(booking.id, 'confirmed')}
+              className={cn(
+                'w-full px-3 py-2 rounded-xl border text-xs transition-all duration-150 text-center mb-2',
+                booking.status === 'confirmed'
+                  ? 'bg-blue-50 border-blue-400 text-blue-800 font-semibold'
+                  : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50',
+              )}
+            >
+              Подтвердить
+            </button>
+            {/* Attended / No-show — side by side */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => { setPayMethod(null); setShowPayment(true) }}
+                className={cn(
+                  'px-3 py-2.5 rounded-xl border text-xs transition-all duration-150 text-center font-medium',
+                  booking.status === 'completed'
+                    ? 'bg-green-50 border-green-400 text-green-800 font-semibold'
+                    : 'border-slate-200 text-slate-500 hover:border-green-200 hover:text-green-700 hover:bg-green-50',
+                )}
+              >
+                Пришёл
+              </button>
+              <button
+                onClick={() => onStatusChange(booking.id, 'cancelled')}
+                className={cn(
+                  'px-3 py-2.5 rounded-xl border text-xs transition-all duration-150 text-center font-medium',
+                  booking.status === 'cancelled'
+                    ? 'bg-red-50 border-red-400 text-red-800 font-semibold'
+                    : 'border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-600 hover:bg-red-50',
+                )}
+              >
+                Не пришёл
+              </button>
             </div>
           </div>
 
