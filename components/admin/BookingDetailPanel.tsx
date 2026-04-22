@@ -45,11 +45,6 @@ function WAIcon() {
   )
 }
 
-const STATUS_OPTS: { key: BookingEntry['status']; label: string; active: string }[] = [
-  { key: 'confirmed', label: 'Подтвердить', active: 'bg-blue-50  border-blue-400  text-blue-800  font-semibold' },
-  { key: 'completed', label: 'Пришёл',      active: 'bg-green-50 border-green-400 text-green-800 font-semibold' },
-  { key: 'cancelled', label: 'Не пришёл',   active: 'bg-red-50   border-red-400   text-red-800   font-semibold' },
-]
 
 function tToMin(t: string) {
   const [h, m] = t.split(':').map(Number)
